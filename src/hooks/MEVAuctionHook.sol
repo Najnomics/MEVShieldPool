@@ -64,3 +64,22 @@ contract MEVAuctionHook is BaseHook, ReentrancyGuard, Ownable, IMEVAuction {
 
     function submitBid(PoolKey calldata key) external payable nonReentrant {
         PoolId poolId = key.toId();
+        require(msg.value >= AuctionLib.MIN_BID, "Bid too low");
+        require(auctions[poolId].isActive, "Auction not active");
+        require(block.timestamp < auctions[poolId].deadline, "Auction expired");
+        require(msg.value > auctions[poolId].highestBid, "Bid not high enough");
+
+        if (auctions[poolId].highestBidder != address(0)) {
+            payable(auctions[poolId].highestBidder).transfer(auctions[poolId].highestBid);
+        }
+
+        auctions[poolId].highestBid = msg.value;
+        auctions[poolId].highestBidder = msg.sender;
+        bids[poolId][msg.sender] = msg.value;
+        
+        if (bidders[poolId].length == 0 || bidders[poolId][bidders[poolId].length - 1] != msg.sender) {
+            bidders[poolId].push(msg.sender);
+        }
+
+        emit BidSubmitted(poolId, msg.sender, msg.value);
+    }
