@@ -106,3 +106,23 @@ contract MEVAuctionHook is BaseHook, ReentrancyGuard, Ownable, IMEVAuction {
 
         return (BaseHook.beforeSwap.selector, BeforeSwapDeltaLibrary.ZERO_DELTA, 0);
     }
+
+    function _finalizeAuction(PoolId poolId) internal {
+        AuctionLib.AuctionData storage auction = auctions[poolId];
+        
+        if (auction.highestBidder != address(0)) {
+            emit AuctionWon(poolId, auction.highestBidder, auction.highestBid);
+            _distributeMEV(poolId, auction.highestBid);
+        }
+        
+        auction.isActive = false;
+    }
+
+    function _startNewAuction(PoolId poolId) internal {
+        AuctionLib.AuctionData storage auction = auctions[poolId];
+        auction.highestBid = 0;
+        auction.highestBidder = address(0);
+        auction.deadline = block.timestamp + AuctionLib.AUCTION_DURATION;
+        auction.isActive = true;
+        auction.blockHash = blockhash(block.number - 1);
+    }
