@@ -16,10 +16,15 @@
   },
   "dependencies": {
     "@lit-protocol/lit-node-client": "^7.3.1",
-    "@lit-protocol/contracts-sdk": "^0.0.54",
+    "@lit-protocol/contracts-sdk": "^7.3.1",
     "@lit-protocol/auth-helpers": "^7.3.1",
     "@lit-protocol/constants": "^7.3.1",
-    "@lit-protocol/pkp-ethers": "^7.3.1"
+    "@lit-protocol/pkp-ethers": "^7.3.1",
+    "@pythnetwork/pyth-sdk-js": "^1.2.0",
+    "@pythnetwork/pyth-evm-js": "^1.2.0",
+    "ethers": "^6.8.0",
+    "ws": "^8.14.0",
+    "axios": "^1.6.0"
   },
   "devDependencies": {
     "@types/node": "^20.0.0",
