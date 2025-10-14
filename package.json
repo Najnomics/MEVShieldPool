@@ -1,0 +1,28 @@
+{
+  "name": "mevshield-pool",
+  "version": "1.0.0",
+  "description": "AI-Powered Privacy and Cross-Chain Execution for Uniswap V4",
+  "scripts": {
+    "build": "forge build",
+    "test": "forge test",
+    "deploy": "forge script script/Deploy.s.sol --broadcast",
+    "deploy:local": "forge script script/Deploy.s.sol --rpc-url http://localhost:8545 --broadcast",
+    "deploy:sepolia": "forge script script/Deploy.s.sol --rpc-url $SEPOLIA_RPC_URL --broadcast --verify",
+    "lint": "forge fmt --check",
+    "format": "forge fmt",
+    "coverage": "forge coverage",
+    "snapshot": "forge snapshot",
+    "anvil": "anvil"
+  },
+  "dependencies": {
+    "@lit-protocol/lit-node-client": "^7.3.1",
+    "@lit-protocol/contracts-sdk": "^0.0.54",
+    "@lit-protocol/auth-helpers": "^7.3.1",
+    "@lit-protocol/constants": "^7.3.1",
+    "@lit-protocol/pkp-ethers": "^7.3.1"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "typescript": "^5.0.0"
+  }
+}
