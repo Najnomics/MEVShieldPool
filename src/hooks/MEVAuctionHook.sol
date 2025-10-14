@@ -19,3 +19,27 @@ contract MEVAuctionHook is BaseHook, ReentrancyGuard, Ownable, IMEVAuction {
     using AuctionLib for AuctionLib.AuctionData;
 
     mapping(PoolId => AuctionLib.AuctionData) public auctions;
+    mapping(PoolId => mapping(address => uint256)) public bids;
+    mapping(PoolId => mapping(address => uint256)) public lpRewards;
+    mapping(PoolId => address[]) public bidders;
+
+    constructor(IPoolManager _poolManager) BaseHook(_poolManager) Ownable(msg.sender) {}
+
+    function getHookPermissions() public pure override returns (Hooks.Permissions memory) {
+        return Hooks.Permissions({
+            beforeInitialize: true,
+            afterInitialize: false,
+            beforeAddLiquidity: true,
+            afterAddLiquidity: false,
+            beforeRemoveLiquidity: true,
+            afterRemoveLiquidity: false,
+            beforeSwap: true,
+            afterSwap: true,
+            beforeDonate: false,
+            afterDonate: false,
+            beforeSwapReturnDelta: false,
+            afterSwapReturnDelta: false,
+            afterAddLiquidityReturnDelta: false,
+            afterRemoveLiquidityReturnDelta: false
+        });
+    }
