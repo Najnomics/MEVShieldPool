@@ -33,14 +33,20 @@ contract PythPriceHook is IPythPriceOracle {
     }
 
     function analyzeMEVOpportunity(
-        bytes32 feedId,
-        int64 currentPrice,
-        uint256 swapAmount
-    ) external pure returns (uint256 estimatedMEV, bool profitable) {
-        // Basic MEV calculation - can be enhanced with more sophisticated algorithms
-        uint256 priceImpact = (swapAmount * 100) / 1000000; // 0.01% per million units
-        estimatedMEV = uint256(uint64(currentPrice)) * priceImpact / 10000;
-        profitable = estimatedMEV > 0.001 ether; // Minimum MEV threshold
-        return (estimatedMEV, profitable);
+        bytes32 priceId,
+        int64 swapPrice
+    ) external view returns (uint256 mevValue) {
+        // Get current price from Pyth
+        PythStructs.Price memory currentPrice = pyth.getPrice(priceId);
+        
+        // Calculate MEV opportunity based on price difference
+        int64 priceDiff = swapPrice - currentPrice.price;
+        if (priceDiff > 0) {
+            mevValue = uint256(uint64(priceDiff)) * 1e10; // Convert to 18 decimals
+        } else {
+            mevValue = 0;
+        }
+        
+        return mevValue;
     }
 }

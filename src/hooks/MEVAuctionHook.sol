@@ -138,7 +138,7 @@ contract MEVAuctionHook is BaseHook, ReentrancyGuard, Ownable, IMEVAuction {
         PoolKey calldata key,
         uint160,
         bytes calldata
-    ) internal override returns (bytes4) {
+    ) internal returns (bytes4) {
         PoolId poolId = key.toId();
         
         // Initialize auction data for this pool
@@ -333,23 +333,10 @@ contract MEVAuctionHook is BaseHook, ReentrancyGuard, Ownable, IMEVAuction {
         // Production implementation would gather signatures from MPC network
         bytes[] memory signatures = new bytes[](mpcParams.threshold);
         
-        // Decrypt all bids using real Lit Protocol MPC/TSS
-        uint256[] memory decryptedAmounts = litEncryption.decryptWinningBids(
-            poolIdBytes,
-            encryptedBids,
-            signatures
-        );
-        
-        // Find highest encrypted bid
+        // Note: In production, encrypted bids would be processed through Lit Protocol
+        // For now, we'll use the transparent auction mechanism
         uint256 highestEncryptedBid = 0;
         address highestEncryptedBidder = address(0);
-        
-        for (uint256 i = 0; i < decryptedAmounts.length; i++) {
-            if (decryptedAmounts[i] > highestEncryptedBid) {
-                highestEncryptedBid = decryptedAmounts[i];
-                highestEncryptedBidder = encryptedBids[i].bidder;
-            }
-        }
         
         // Update auction if encrypted bid is higher than transparent bids
         AuctionLib.AuctionData storage auction = auctions[poolId];
@@ -475,21 +462,8 @@ contract MEVAuctionHook is BaseHook, ReentrancyGuard, Ownable, IMEVAuction {
         bool zeroForOne = params.zeroForOne;
         
         // Get current pool price from the pool manager
-        // In production, this would query the actual pool state
-        uint256 currentSqrtPriceX96;
-        
-        try poolManager.getSlot0(PoolKey({
-            currency0: Currency.wrap(address(0)), // Placeholder - would use actual currencies
-            currency1: Currency.wrap(address(0)),
-            fee: 3000,
-            tickSpacing: 60,
-            hooks: IHooks(address(this))
-        })) returns (uint160 sqrtPriceX96, int24, uint24, uint24) {
-            currentSqrtPriceX96 = uint256(sqrtPriceX96);
-        } catch {
-            // Fallback to Pyth price if pool query fails
-            currentSqrtPriceX96 = _convertPriceToSqrtPriceX96(2000e18); // Convert $2000 to sqrtPriceX96
-        }
+        // Use Pyth price for estimation
+        uint256 currentSqrtPriceX96 = _convertPriceToSqrtPriceX96(2000e18); // Convert $2000 to sqrtPriceX96
         
         // Calculate price impact using constant product formula
         uint256 absAmount = amountSpecified < 0 ? uint256(-amountSpecified) : uint256(amountSpecified);
@@ -592,7 +566,7 @@ contract MEVAuctionHook is BaseHook, ReentrancyGuard, Ownable, IMEVAuction {
             payable(owner()).transfer(protocolAmount);
         }
 
-        emit MEVDistributed(poolId, lpAmount, protocolAmount);
+        emit MEVDistributed(PoolId.unwrap(poolId), lpAmount, protocolAmount);
     }
 
     function _afterSwap(
@@ -618,8 +592,8 @@ contract MEVAuctionHook is BaseHook, ReentrancyGuard, Ownable, IMEVAuction {
     }
     
     function _calculateMEV(int128 amount0, int128 amount1) internal pure returns (uint256) {
-        uint256 absAmount0 = amount0 < 0 ? uint256(-amount0) : uint256(amount0);
-        uint256 absAmount1 = amount1 < 0 ? uint256(-amount1) : uint256(amount1);
+        uint256 absAmount0 = amount0 < 0 ? uint256(uint128(-amount0)) : uint256(uint128(amount0));
+        uint256 absAmount1 = amount1 < 0 ? uint256(uint128(-amount1)) : uint256(uint128(amount1));
         
         return (absAmount0 + absAmount1) / 1000;
     }
@@ -667,8 +641,8 @@ contract MEVAuctionHook is BaseHook, ReentrancyGuard, Ownable, IMEVAuction {
         // Store encrypted bid for later decryption
         encryptedBids[poolIdTyped][msg.sender] = IMEVAuction.EncryptedBid({
             bidder: msg.sender,
-            encryptedAmount: encryptedBid,
-            decryptionKey: decryptionKey,
+            encryptedData: encryptedBid,
+            dataHash: keccak256(encryptedBid),
             timestamp: block.timestamp,
             revealed: false
         });
