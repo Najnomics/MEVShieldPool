@@ -265,3 +265,234 @@ class AgentStatsResponse(Model):
     uptime_hours: float
     active_opportunities: int
     analysis_interval: float
+
+    async def _fetch_market_data(self) -> Dict[str, MarketData]:
+        """
+        Fetch real-time market data for analysis
+        
+        Returns:
+            Dictionary mapping pool IDs to market data
+        """
+        market_data = {}
+        
+        try:
+            # Fetch data from multiple sources for comprehensive analysis
+            # In production, this would integrate with:
+            # - Uniswap V4 subgraph for pool data
+            # - Pyth Network for price feeds
+            # - DEX aggregators for volume data
+            
+            # Simulated market data for demonstration
+            sample_pools = [
+                "0x1234...abcd",  # ETH/USDC pool
+                "0x5678...efgh",  # WBTC/ETH pool  
+                "0x9abc...ijkl"   # DAI/USDC pool
+            ]
+            
+            for pool_id in sample_pools:
+                # Simulate fetching real market data
+                market_data[pool_id] = MarketData(
+                    token0_price=2000.0 + np.random.normal(0, 50),  # ETH price with volatility
+                    token1_price=1.0 + np.random.normal(0, 0.01),  # USDC price
+                    volume_24h=1000000.0 + np.random.normal(0, 100000),
+                    liquidity=5000000.0 + np.random.normal(0, 500000),
+                    price_impact=0.1 + np.random.uniform(0, 0.5),
+                    volatility=np.random.uniform(0.1, 0.8)
+                )
+            
+            # Cache market data for efficiency
+            self.market_data_cache.update(market_data)
+            
+        except Exception as e:
+            logger.error(f"Failed to fetch market data: {e}")
+            # Return cached data as fallback
+            market_data = self.market_data_cache
+            
+        return market_data
+
+    async def _detect_mev_opportunities(self, market_data: Dict[str, MarketData]) -> List[MEVOpportunity]:
+        """
+        Detect MEV opportunities using advanced analytics
+        
+        Args:
+            market_data: Current market data for analysis
+            
+        Returns:
+            List of detected MEV opportunities
+        """
+        opportunities = []
+        
+        try:
+            current_block = await self._get_current_block()
+            
+            for pool_id, data in market_data.items():
+                # Arbitrage opportunity detection
+                arbitrage_opportunity = self._detect_arbitrage(pool_id, data, current_block)
+                if arbitrage_opportunity:
+                    opportunities.append(arbitrage_opportunity)
+                
+                # Sandwich attack detection
+                sandwich_opportunity = self._detect_sandwich_attack(pool_id, data, current_block)
+                if sandwich_opportunity:
+                    opportunities.append(sandwich_opportunity)
+                
+                # Liquidation opportunity detection
+                liquidation_opportunity = self._detect_liquidation(pool_id, data, current_block)
+                if liquidation_opportunity:
+                    opportunities.append(liquidation_opportunity)
+            
+        except Exception as e:
+            logger.error(f"MEV detection error: {e}")
+            
+        return opportunities
+
+    def _detect_arbitrage(self, pool_id: str, data: MarketData, block_number: int) -> Optional[MEVOpportunity]:
+        """
+        Detect arbitrage opportunities based on price discrepancies
+        
+        Args:
+            pool_id: Pool identifier
+            data: Market data for the pool
+            block_number: Current block number
+            
+        Returns:
+            MEV opportunity if detected, None otherwise
+        """
+        # Calculate price deviation threshold for arbitrage
+        price_ratio = data.token0_price / data.token1_price if data.token1_price > 0 else 0
+        expected_ratio = 2000.0  # Expected ETH/USDC ratio
+        
+        deviation = abs(price_ratio - expected_ratio) / expected_ratio
+        
+        # Significant deviation indicates arbitrage opportunity
+        if deviation > 0.01:  # 1% threshold
+            estimated_value = min(data.liquidity * deviation * 0.1, 10.0)  # Cap at 10 ETH
+            risk_score = min(deviation * 10, 1.0)  # Scale to 0-1
+            
+            return MEVOpportunity(
+                pool_id=pool_id,
+                mev_type="arbitrage",
+                estimated_value=estimated_value,
+                risk_score=risk_score,
+                confidence=0.85,
+                timestamp=datetime.now(),
+                block_number=block_number
+            )
+        
+        return None
+
+    def _detect_sandwich_attack(self, pool_id: str, data: MarketData, block_number: int) -> Optional[MEVOpportunity]:
+        """
+        Detect potential sandwich attack opportunities
+        
+        Args:
+            pool_id: Pool identifier
+            data: Market data for the pool
+            block_number: Current block number
+            
+        Returns:
+            MEV opportunity if detected, None otherwise
+        """
+        # High price impact + low liquidity = sandwich opportunity
+        if data.price_impact > 0.3 and data.liquidity < 1000000:
+            # Calculate potential profit from sandwich attack
+            estimated_value = data.volume_24h * 0.001 * data.price_impact  # 0.1% of volume * impact
+            risk_score = (data.price_impact + (1 - data.liquidity / 10000000)) / 2
+            
+            return MEVOpportunity(
+                pool_id=pool_id,
+                mev_type="sandwich",
+                estimated_value=min(estimated_value, 5.0),  # Cap at 5 ETH
+                risk_score=min(risk_score, 1.0),
+                confidence=0.75,
+                timestamp=datetime.now(),
+                block_number=block_number
+            )
+        
+        return None
+
+    def _detect_liquidation(self, pool_id: str, data: MarketData, block_number: int) -> Optional[MEVOpportunity]:
+        """
+        Detect liquidation opportunities based on volatility
+        
+        Args:
+            pool_id: Pool identifier
+            data: Market data for the pool
+            block_number: Current block number
+            
+        Returns:
+            MEV opportunity if detected, None otherwise
+        """
+        # High volatility indicates potential liquidation opportunities
+        if data.volatility > 0.6:
+            estimated_value = data.volatility * 2.0  # Simplified calculation
+            risk_score = data.volatility
+            
+            return MEVOpportunity(
+                pool_id=pool_id,
+                mev_type="liquidation",
+                estimated_value=min(estimated_value, 3.0),  # Cap at 3 ETH
+                risk_score=min(risk_score, 1.0),
+                confidence=0.65,
+                timestamp=datetime.now(),
+                block_number=block_number
+            )
+        
+        return None
+
+    async def _apply_metta_reasoning(self, opportunities: List[MEVOpportunity]) -> List[MEVOpportunity]:
+        """
+        Apply MeTTa reasoning engine for advanced pattern recognition
+        
+        Args:
+            opportunities: Initial list of detected opportunities
+            
+        Returns:
+            Enhanced opportunities with MeTTa analysis
+        """
+        try:
+            # MeTTa reasoning would analyze patterns and correlations
+            # For demonstration, we enhance the confidence scores
+            enhanced_opportunities = []
+            
+            for opportunity in opportunities:
+                # Apply symbolic reasoning patterns
+                enhanced_opportunity = await self._metta_analyze_opportunity(opportunity)
+                enhanced_opportunities.append(enhanced_opportunity)
+            
+            return enhanced_opportunities
+            
+        except Exception as e:
+            logger.error(f"MeTTa reasoning error: {e}")
+            return opportunities  # Fallback to original opportunities
+
+    async def _metta_analyze_opportunity(self, opportunity: MEVOpportunity) -> MEVOpportunity:
+        """
+        Apply MeTTa symbolic reasoning to a single opportunity
+        
+        Args:
+            opportunity: MEV opportunity to analyze
+            
+        Returns:
+            Enhanced opportunity with MeTTa insights
+        """
+        # Simulate MeTTa reasoning patterns
+        # In production, this would interface with actual MeTTa engine
+        
+        # Pattern: High-value arbitrage with low risk is highly confident
+        if (opportunity.mev_type == "arbitrage" and 
+            opportunity.estimated_value > 2.0 and 
+            opportunity.risk_score < 0.5):
+            opportunity.confidence = min(opportunity.confidence + 0.1, 1.0)
+        
+        # Pattern: Multiple MEV types in same pool increase risk
+        concurrent_opportunities = [
+            op for op in self.detected_opportunities 
+            if op.pool_id == opportunity.pool_id and 
+               op.timestamp > datetime.now() - timedelta(minutes=5)
+        ]
+        
+        if len(concurrent_opportunities) > 2:
+            opportunity.risk_score = min(opportunity.risk_score + 0.2, 1.0)
+        
+        return opportunity
