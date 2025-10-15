@@ -149,3 +149,16 @@ contract MEVAuctionHook is BaseHook, ReentrancyGuard, Ownable, IMEVAuction {
         bytes calldata
     ) external override returns (bytes4, int128) {
         PoolId poolId = key.toId();
+        
+        int128 amount0Delta = delta.amount0();
+        int128 amount1Delta = delta.amount1();
+        
+        uint256 mevValue = _calculateMEV(amount0Delta, amount1Delta);
+        
+        if (mevValue > 0) {
+            auctions[poolId].totalMEVCollected += mevValue;
+            emit MEVDetected(poolId, mevValue);
+        }
+        
+        return (BaseHook.afterSwap.selector, 0);
+    }
