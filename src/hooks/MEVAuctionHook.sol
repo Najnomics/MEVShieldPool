@@ -243,6 +243,26 @@ contract MEVAuctionHook is BaseHook, ReentrancyGuard, Ownable, IMEVAuction {
         bytes calldata
     ) internal override returns (bytes4, BeforeSwapDelta, uint24) {
         PoolId poolId = key.toId();
+        
+        // Handle auction lifecycle in separate function to reduce stack depth
+        _handleAuctionLifecycle(poolId, sender, key, params);
+
+        return (BaseHook.beforeSwap.selector, BeforeSwapDeltaLibrary.ZERO_DELTA, 0);
+    }
+
+    /**
+     * @dev Handle auction lifecycle management in separate function to avoid stack depth issues
+     * @param poolId Pool identifier
+     * @param sender Transaction sender
+     * @param key Pool key for price analysis
+     * @param params Swap parameters for MEV calculation
+     */
+    function _handleAuctionLifecycle(
+        PoolId poolId,
+        address sender,
+        PoolKey calldata key,
+        SwapParams calldata params
+    ) internal {
         AuctionLib.AuctionData storage auction = auctions[poolId];
 
         // Check if current auction has expired and needs finalization
@@ -250,27 +270,15 @@ contract MEVAuctionHook is BaseHook, ReentrancyGuard, Ownable, IMEVAuction {
             _finalizeAuctionWithEncryptedBids(poolId);
         }
 
-        // Validate sender has auction rights for this block
-        bool hasAuctionRights = _validateAuctionRights(poolId, sender);
-        
-        // Get price feed data for MEV analysis
-        uint256 expectedPrice = _getCurrentPrice(key);
-        uint256 swapPrice = _estimateSwapPrice(params);
-        
-        // Calculate potential MEV value
-        uint256 potentialMEV = _calculatePotentialMEV(expectedPrice, swapPrice, params);
-        
         // If no active auction, start a new one
         if (!auction.isActive) {
             _startNewAuction(poolId);
         }
-        
-        // Grant async swap permission if sender has auction rights
-        if (hasAuctionRights) {
+
+        // Validate and grant permissions
+        if (_validateAuctionRights(poolId, sender)) {
             asyncSwapPermissions[poolId][sender] = true;
         }
-
-        return (BaseHook.beforeSwap.selector, BeforeSwapDeltaLibrary.ZERO_DELTA, 0);
     }
 
     /**
@@ -321,18 +329,22 @@ contract MEVAuctionHook is BaseHook, ReentrancyGuard, Ownable, IMEVAuction {
         // Only callable by this contract to maintain access control
         require(msg.sender == address(this), "Internal function only");
         
-        ILitEncryption.EncryptedBid[] memory pendingBids = pendingEncryptedBids[poolId];
-        if (pendingBids.length == 0) return;
+        // Check if there are pending bids to process
+        if (pendingEncryptedBids[poolId].length == 0) return;
         
-        // Get MPC threshold signatures from Lit Protocol network
-        // In production, these signatures would be provided by MPC nodes
+        // Validate MPC setup
         ILitEncryption.MPCParams memory mpcParams = litEncryption.getMPCParams(poolIdBytes);
         require(mpcParams.totalNodes > 0, "MPC not initialized");
         
-        // Create placeholder for real MPC signatures
-        // Production implementation would gather signatures from MPC network
-        bytes[] memory signatures = new bytes[](mpcParams.threshold);
-        
+        // Process encrypted bids (simplified for stack depth)
+        _updateAuctionWithEncryptedBids(poolId);
+    }
+
+    /**
+     * @dev Update auction with processed encrypted bids (separate function to reduce stack depth)
+     * @param poolId Pool identifier
+     */
+    function _updateAuctionWithEncryptedBids(PoolId poolId) internal {
         // Note: In production, encrypted bids would be processed through Lit Protocol
         // For now, we'll use the transparent auction mechanism
         uint256 highestEncryptedBid = 0;

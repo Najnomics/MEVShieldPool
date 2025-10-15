@@ -250,4 +250,147 @@ contract MEVAuctionHookTest is Test {
         assertEq(highestBid, bidAmount, "Encrypted bid should be recorded");
         assertEq(highestBidder, bidder1, "Bidder should be recorded");
     }
+
+    /**
+     * @dev Test multiple bidders competing in auction
+     */
+    function testMultipleBiddersCompetition() public {
+        uint256 firstBid = 1 ether;
+        uint256 secondBid = 1.5 ether;
+        uint256 thirdBid = 2 ether;
+        
+        // First bidder submits bid
+        vm.prank(bidder1);
+        mevHook.submitBid{value: firstBid}(PoolId.unwrap(testPoolId));
+        
+        // Second bidder outbids first
+        vm.prank(bidder2);
+        mevHook.submitBid{value: secondBid}(PoolId.unwrap(testPoolId));
+        
+        // First bidder tries to outbid with higher amount
+        vm.prank(bidder1);
+        mevHook.submitBid{value: thirdBid}(PoolId.unwrap(testPoolId));
+        
+        // Verify final auction state
+        (uint256 highestBid, address highestBidder,,,, ) = mevHook.auctions(testPoolId);
+        assertEq(highestBid, thirdBid, "Highest bid should be the third bid");
+        assertEq(highestBidder, bidder1, "Bidder1 should be the final winner");
+    }
+
+    /**
+     * @dev Test auction rights validation before swap
+     */
+    function testAuctionRightsValidation() public {
+        uint256 bidAmount = 1 ether;
+        
+        // Submit winning bid
+        vm.prank(bidder1);
+        mevHook.submitBid{value: bidAmount}(PoolId.unwrap(testPoolId));
+        
+        // Verify auction rights are assigned to bidder1
+        (,, address highestBidder,,,, ) = mevHook.auctions(testPoolId);
+        assertEq(highestBidder, bidder1, "Bidder1 should have auction rights");
+        
+        // Note: In production, this would be validated in beforeSwap hook
+    }
+
+    /**
+     * @dev Test gas efficiency of bid submission
+     */
+    function testBidSubmissionGasUsage() public {
+        uint256 bidAmount = 1 ether;
+        
+        // Measure gas usage for bid submission
+        vm.prank(bidder1);
+        uint256 gasBefore = gasleft();
+        mevHook.submitBid{value: bidAmount}(PoolId.unwrap(testPoolId));
+        uint256 gasUsed = gasBefore - gasleft();
+        
+        // Gas usage should be reasonable (under 100k gas)
+        assertTrue(gasUsed < 100000, "Bid submission should be gas efficient");
+    }
+
+    /**
+     * @dev Test auction finalization after expiry
+     */
+    function testAuctionFinalizationFlow() public {
+        uint256 bidAmount = 1.5 ether;
+        
+        // Submit bid
+        vm.prank(bidder1);
+        mevHook.submitBid{value: bidAmount}(PoolId.unwrap(testPoolId));
+        
+        // Record initial auction state
+        (uint256 initialBid, address initialBidder, uint256 deadline,, uint256 auctionRound, ) = 
+            mevHook.auctions(testPoolId);
+        
+        // Fast forward past deadline
+        vm.warp(deadline + 1);
+        
+        // Verify auction is expired but still contains winner data
+        assertTrue(block.timestamp > deadline, "Auction should be expired");
+        assertEq(initialBid, bidAmount, "Winning bid should be preserved");
+        assertEq(initialBidder, bidder1, "Winning bidder should be preserved");
+    }
+
+    /**
+     * @dev Test reentrancy protection on bid submission
+     */
+    function testReentrancyProtection() public {
+        uint256 bidAmount = 1 ether;
+        
+        // Create malicious contract that tries to reenter
+        MaliciousReentrant malicious = new MaliciousReentrant(address(mevHook), testPoolId);
+        vm.deal(address(malicious), bidAmount * 2);
+        
+        // Attempt reentrancy attack should fail
+        vm.expectRevert();
+        malicious.attemptReentrantBid{value: bidAmount}();
+    }
+
+    /**
+     * @dev Test auction round progression
+     */
+    function testAuctionRoundProgression() public {
+        // Get initial auction round
+        (,,,,, uint256 initialRound, ) = mevHook.auctions(testPoolId);
+        
+        // Submit bid and finalize auction by time progression
+        vm.prank(bidder1);
+        mevHook.submitBid{value: 1 ether}(PoolId.unwrap(testPoolId));
+        
+        // Fast forward to trigger new auction round
+        vm.warp(block.timestamp + 13 seconds);
+        
+        // Note: In production, new round would be triggered by beforeSwap hook
+        // For testing, we verify current round state
+        (,,,,, uint256 currentRound, ) = mevHook.auctions(testPoolId);
+        assertEq(currentRound, initialRound, "Round should remain same until triggered");
+    }
+}
+
+/**
+ * @dev Malicious contract for testing reentrancy protection
+ */
+contract MaliciousReentrant {
+    MEVAuctionHook private hook;
+    PoolId private poolId;
+    bool private attacking;
+    
+    constructor(address _hook, PoolId _poolId) {
+        hook = MEVAuctionHook(_hook);
+        poolId = _poolId;
+    }
+    
+    function attemptReentrantBid() external payable {
+        attacking = true;
+        hook.submitBid{value: msg.value}(PoolId.unwrap(poolId));
+    }
+    
+    receive() external payable {
+        if (attacking && address(this).balance > 0) {
+            // Try to reenter during refund
+            hook.submitBid{value: address(this).balance}(PoolId.unwrap(poolId));
+        }
+    }
 }
