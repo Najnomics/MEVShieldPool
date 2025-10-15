@@ -162,3 +162,28 @@ contract MEVAuctionHook is BaseHook, ReentrancyGuard, Ownable, IMEVAuction {
         
         return (BaseHook.afterSwap.selector, 0);
     }
+    
+    function _calculateMEV(int128 amount0, int128 amount1) internal pure returns (uint256) {
+        uint256 absAmount0 = amount0 < 0 ? uint256(-amount0) : uint256(amount0);
+        uint256 absAmount1 = amount1 < 0 ? uint256(-amount1) : uint256(amount1);
+        
+        return (absAmount0 + absAmount1) / 1000;
+    }
+    
+    function beforeAddLiquidity(
+        address,
+        PoolKey calldata,
+        IPoolManager.ModifyLiquidityParams calldata,
+        bytes calldata
+    ) external override returns (bytes4) {
+        return BaseHook.beforeAddLiquidity.selector;
+    }
+    
+    function beforeRemoveLiquidity(
+        address,
+        PoolKey calldata,
+        IPoolManager.ModifyLiquidityParams calldata,
+        bytes calldata
+    ) external override returns (bytes4) {
+        return BaseHook.beforeRemoveLiquidity.selector;
+    }
