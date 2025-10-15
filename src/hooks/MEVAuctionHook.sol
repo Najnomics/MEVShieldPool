@@ -152,46 +152,118 @@ contract MEVAuctionHook is BaseHook, ReentrancyGuard, Ownable, IMEVAuction {
         return BaseHook.beforeInitialize.selector;
     }
 
+    /**
+     * @dev Submit a transparent bid for MEV auction rights
+     * @param key The pool key for the auction
+     */
     function submitBid(PoolKey calldata key) external payable nonReentrant {
         PoolId poolId = key.toId();
+        
+        // Validate bid requirements
         require(msg.value >= AuctionLib.MIN_BID, "Bid too low");
         require(auctions[poolId].isActive, "Auction not active");
         require(block.timestamp < auctions[poolId].deadline, "Auction expired");
         require(msg.value > auctions[poolId].highestBid, "Bid not high enough");
 
+        // Refund previous highest bidder
         if (auctions[poolId].highestBidder != address(0)) {
             payable(auctions[poolId].highestBidder).transfer(auctions[poolId].highestBid);
         }
 
+        // Update auction state
         auctions[poolId].highestBid = msg.value;
         auctions[poolId].highestBidder = msg.sender;
         bids[poolId][msg.sender] = msg.value;
         
+        // Track bidder if not already in list
         if (bidders[poolId].length == 0 || bidders[poolId][bidders[poolId].length - 1] != msg.sender) {
             bidders[poolId].push(msg.sender);
         }
 
         emit BidSubmitted(poolId, msg.sender, msg.value);
     }
+    
+    /**
+     * @dev Submit an encrypted bid for MEV auction rights using Lit Protocol
+     * @param key The pool key for the auction
+     * @param accessConditions Access control conditions for bid decryption
+     */
+    function submitEncryptedBid(
+        PoolKey calldata key,
+        bytes calldata accessConditions
+    ) external payable nonReentrant {
+        PoolId poolId = key.toId();
+        bytes32 poolIdBytes = bytes32(uint256(PoolId.unwrap(poolId)));
+        
+        // Validate basic auction requirements
+        require(msg.value >= AuctionLib.MIN_BID, "Bid too low");
+        require(auctions[poolId].isActive, "Auction not active");
+        require(block.timestamp < auctions[poolId].deadline, "Auction expired");
+        
+        // Encrypt the bid using Lit Protocol
+        bytes memory encryptedData = litEncryption.encryptBid(
+            poolIdBytes,
+            msg.value,
+            accessConditions
+        );
+        
+        // Store encrypted bid for later decryption
+        ILitEncryption.EncryptedBid memory encryptedBid = ILitEncryption.EncryptedBid({
+            encryptedAmount: encryptedData,
+            accessControlConditions: accessConditions,
+            sessionKeyHash: keccak256(abi.encodePacked(poolIdBytes, msg.sender, block.timestamp)),
+            timestamp: block.timestamp,
+            bidder: msg.sender
+        });
+        
+        pendingEncryptedBids[poolId].push(encryptedBid);
+        
+        // Track bidder for encrypted bids
+        if (bidders[poolId].length == 0 || bidders[poolId][bidders[poolId].length - 1] != msg.sender) {
+            bidders[poolId].push(msg.sender);
+        }
+        
+        emit EncryptedBidSubmitted(poolId, msg.sender, encryptedBid.sessionKeyHash);
+    }
 
+    /**
+     * @dev Hook called before each swap to validate auction rights and manage auctions
+     * @param sender Address attempting to execute the swap
+     * @param key Pool key for the swap
+     * @return Hook selector, swap delta, and dynamic fee
+     */
     function beforeSwap(
         address sender,
         PoolKey calldata key,
-        IPoolManager.SwapParams calldata,
+        IPoolManager.SwapParams calldata params,
         bytes calldata
     ) external override returns (bytes4, BeforeSwapDelta, uint24) {
         PoolId poolId = key.toId();
         AuctionLib.AuctionData storage auction = auctions[poolId];
 
+        // Check if current auction has expired and needs finalization
         if (auction.isActive && auction.isAuctionExpired()) {
-            _finalizeAuction(poolId);
+            _finalizeAuctionWithEncryptedBids(poolId);
         }
 
-        bool hasAuctionRights = (auction.highestBidder == sender) && 
-                               (auction.blockHash == blockhash(block.number - 1));
-
+        // Validate sender has auction rights for this block
+        bool hasAuctionRights = _validateAuctionRights(poolId, sender);
+        
+        // Get price feed data for MEV analysis
+        uint256 expectedPrice = _getCurrentPrice(key);
+        uint256 swapPrice = _estimateSwapPrice(params);
+        
+        // Calculate potential MEV value
+        uint256 potentialMEV = _calculatePotentialMEV(expectedPrice, swapPrice, params);
+        
+        // If no active auction, start a new one
         if (!auction.isActive) {
             _startNewAuction(poolId);
+        }
+        
+        // Grant async swap permission if sender has auction rights
+        if (hasAuctionRights) {
+            asyncSwapPermissions[poolId][sender] = true;
         }
 
         return (BaseHook.beforeSwap.selector, BeforeSwapDeltaLibrary.ZERO_DELTA, 0);
