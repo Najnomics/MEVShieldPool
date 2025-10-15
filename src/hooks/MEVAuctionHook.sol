@@ -126,3 +126,26 @@ contract MEVAuctionHook is BaseHook, ReentrancyGuard, Ownable, IMEVAuction {
         auction.isActive = true;
         auction.blockHash = blockhash(block.number - 1);
     }
+
+    function _distributeMEV(PoolId poolId, uint256 amount) internal {
+        uint256 lpAmount = (amount * AuctionLib.LP_SHARE) / 100;
+        uint256 protocolAmount = amount - lpAmount;
+
+        auctions[poolId].totalMEVCollected += amount;
+        lpRewards[poolId][address(this)] += lpAmount;
+
+        if (protocolAmount > 0) {
+            payable(owner()).transfer(protocolAmount);
+        }
+
+        emit MEVDistributed(poolId, lpAmount, protocolAmount);
+    }
+
+    function afterSwap(
+        address,
+        PoolKey calldata key,
+        IPoolManager.SwapParams calldata,
+        BalanceDelta delta,
+        bytes calldata
+    ) external override returns (bytes4, int128) {
+        PoolId poolId = key.toId();
