@@ -8,6 +8,7 @@ import {PythPriceHook} from "../../src/hooks/PythPriceHook.sol";
 import {AuctionLib} from "../../src/libraries/AuctionLib.sol";
 import {MockPyth} from "../mocks/MockPyth.sol";
 import {IPoolManager} from "@uniswap/v4-core/src/interfaces/IPoolManager.sol";
+import {SwapParams} from "@uniswap/v4-core/src/types/PoolOperation.sol";
 import {PoolManager} from "@uniswap/v4-core/src/PoolManager.sol";
 import {PoolKey} from "@uniswap/v4-core/src/types/PoolKey.sol";
 import {PoolId, PoolIdLibrary} from "@uniswap/v4-core/src/types/PoolId.sol";
@@ -204,7 +205,7 @@ contract MEVAuctionHookTest is Test {
         bytes4 result = mevHook.beforeSwap(
             bidder1,
             testPool,
-            IPoolManager.SwapParams({
+            SwapParams({
                 zeroForOne: true,
                 amountSpecified: -1e18,
                 sqrtPriceLimitX96: 0
@@ -245,7 +246,7 @@ contract MEVAuctionHookTest is Test {
         mevHook.afterSwap(
             bidder1,
             testPool,
-            IPoolManager.SwapParams({
+            SwapParams({
                 zeroForOne: true,
                 amountSpecified: -1e18,
                 sqrtPriceLimitX96: 0
@@ -276,3 +277,4 @@ contract MEVAuctionHookTest is Test {
         assertEq(highestBid, bidAmount, "Encrypted bid should be recorded");
         assertEq(highestBidder, bidder1, "Bidder should be recorded");
     }
+}

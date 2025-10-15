@@ -27,3 +27,4 @@ contract PythPriceHook is IPythPriceOracle {
         require(msg.value >= fee, "Insufficient fee");
         pyth.updatePriceFeeds{value: fee}(updateData);
     }
+}

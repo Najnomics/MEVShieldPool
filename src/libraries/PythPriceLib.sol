@@ -24,3 +24,4 @@ library PythPriceLib {
             revert PriceConfidenceTooLow();
         }
     }
+}

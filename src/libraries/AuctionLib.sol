@@ -21,3 +21,4 @@ library AuctionLib {
     function isAuctionExpired(AuctionData storage auction) internal view returns (bool) {
         return block.timestamp >= auction.deadline;
     }
+}

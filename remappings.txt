@@ -1,6 +1,6 @@
 @uniswap/v4-periphery/=node_modules/@uniswap/v4-periphery/
 @uniswap/v4-core/=node_modules/@uniswap/v4-core/
-@openzeppelin/contracts/=node_modules/@openzeppelin/contracts/contracts/
+@openzeppelin/contracts/=node_modules/@openzeppelin/contracts/
 @pythnetwork/pyth-sdk-solidity/=node_modules/@pythnetwork/pyth-sdk-solidity/
 forge-std/=node_modules/forge-std/src/
 v4-periphery/=node_modules/@uniswap/v4-periphery/

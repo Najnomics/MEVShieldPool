@@ -180,3 +180,4 @@ contract MEVAuctionIntegrationTest is Test {
         // Emit cross-chain bid processed event
         emit CrossChainBidProcessed(channelId, crossChainBidder, bidAmount);
     }
+}

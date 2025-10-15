@@ -23,3 +23,7 @@ interface IMEVAuction {
     event BidSubmitted(bytes32 indexed poolId, address indexed bidder, uint256 amount);
     event AuctionWon(bytes32 indexed poolId, address indexed winner, uint256 amount);
     event MEVDistributed(bytes32 indexed poolId, uint256 lpAmount, uint256 protocolAmount);
+
+    function submitBid(bytes32 poolId) external payable;
+    function submitEncryptedBid(bytes32 poolId, bytes calldata encryptedBid, bytes calldata decryptionKey) external payable;
+}

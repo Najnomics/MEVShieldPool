@@ -4,13 +4,16 @@ pragma solidity ^0.8.26;
 import {BaseHook} from "@uniswap/v4-periphery/src/utils/BaseHook.sol";
 import {Hooks} from "@uniswap/v4-core/src/libraries/Hooks.sol";
 import {IPoolManager} from "@uniswap/v4-core/src/interfaces/IPoolManager.sol";
+import {SwapParams, ModifyLiquidityParams} from "@uniswap/v4-core/src/types/PoolOperation.sol";
 import {PoolKey} from "@uniswap/v4-core/src/types/PoolKey.sol";
 import {PoolId, PoolIdLibrary} from "@uniswap/v4-core/src/types/PoolId.sol";
 import {BalanceDelta} from "@uniswap/v4-core/src/types/BalanceDelta.sol";
 import {BeforeSwapDelta, BeforeSwapDeltaLibrary} from "@uniswap/v4-core/src/types/BeforeSwapDelta.sol";
 import {Currency} from "@uniswap/v4-core/src/types/Currency.sol";
+import {IHooks} from "@uniswap/v4-core/src/interfaces/IHooks.sol";
 import {ReentrancyGuard} from "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
+import {PythStructs} from "@pythnetwork/pyth-sdk-solidity/PythStructs.sol";
 import {AuctionLib} from "../libraries/AuctionLib.sol";
 import {IMEVAuction} from "../interfaces/IMEVAuction.sol";
 import {ILitEncryption} from "../interfaces/ILitEncryption.sol";
@@ -235,7 +238,7 @@ contract MEVAuctionHook is BaseHook, ReentrancyGuard, Ownable, IMEVAuction {
     function beforeSwap(
         address sender,
         PoolKey calldata key,
-        IPoolManager.SwapParams calldata params,
+        SwapParams calldata params,
         bytes calldata
     ) external override returns (bytes4, BeforeSwapDelta, uint24) {
         PoolId poolId = key.toId();
@@ -463,7 +466,7 @@ contract MEVAuctionHook is BaseHook, ReentrancyGuard, Ownable, IMEVAuction {
      * @param params The swap parameters
      * @return estimatedPrice Estimated price after the swap
      */
-    function _estimateSwapPrice(IPoolManager.SwapParams calldata params) internal view returns (uint256 estimatedPrice) {
+    function _estimateSwapPrice(SwapParams calldata params) internal view returns (uint256 estimatedPrice) {
         // Real-time price estimation using current pool state and Pyth feeds
         // Uses actual AMM mathematics for accurate price impact calculation
         
@@ -540,7 +543,7 @@ contract MEVAuctionHook is BaseHook, ReentrancyGuard, Ownable, IMEVAuction {
     function _calculatePotentialMEV(
         uint256 expectedPrice,
         uint256 swapPrice,
-        IPoolManager.SwapParams calldata params
+        SwapParams calldata params
     ) internal pure returns (uint256 mevValue) {
         // Calculate absolute price deviation
         uint256 priceDeviation = expectedPrice > swapPrice 
@@ -594,7 +597,7 @@ contract MEVAuctionHook is BaseHook, ReentrancyGuard, Ownable, IMEVAuction {
     function afterSwap(
         address,
         PoolKey calldata key,
-        IPoolManager.SwapParams calldata,
+        SwapParams calldata,
         BalanceDelta delta,
         bytes calldata
     ) external override returns (bytes4, int128) {
@@ -623,7 +626,7 @@ contract MEVAuctionHook is BaseHook, ReentrancyGuard, Ownable, IMEVAuction {
     function beforeAddLiquidity(
         address,
         PoolKey calldata,
-        IPoolManager.ModifyLiquidityParams calldata,
+        ModifyLiquidityParams calldata,
         bytes calldata
     ) external override returns (bytes4) {
         return BaseHook.beforeAddLiquidity.selector;
@@ -632,8 +635,9 @@ contract MEVAuctionHook is BaseHook, ReentrancyGuard, Ownable, IMEVAuction {
     function beforeRemoveLiquidity(
         address,
         PoolKey calldata,
-        IPoolManager.ModifyLiquidityParams calldata,
+        ModifyLiquidityParams calldata,
         bytes calldata
     ) external override returns (bytes4) {
         return BaseHook.beforeRemoveLiquidity.selector;
     }
+}

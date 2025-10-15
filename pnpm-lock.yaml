@@ -32,6 +32,9 @@ importers:
       '@pythnetwork/pyth-sdk-js':
         specifier: ^1.2.0
         version: 1.2.0
+      '@pythnetwork/pyth-sdk-solidity':
+        specifier: ^2.2.0
+        version: 2.4.1
       '@uniswap/v4-core':
         specifier: ^1.0.2
         version: 1.0.2
@@ -380,6 +383,9 @@ packages:
 
   '@pythnetwork/pyth-sdk-js@1.2.0':
     resolution: {integrity: sha512-grh6YCkp/nH73ACNu+Mew64lLVgz6egVBJm8JvdNkRggWkUn1PE4ZvV/6ceTIui5OhI369qzMCkldiAlIMBjnQ==}
+
+  '@pythnetwork/pyth-sdk-solidity@2.4.1':
+    resolution: {integrity: sha512-QNrdtv+YiEszz0hvBOWXaJ3PeKJfcSnQnB9GuSZOK1WVuJxNtPTd1Hc2hrpxPm0B4SBKwSSo10I0jb4GXHi42g==}
 
   '@scure/base@1.1.9':
     resolution: {integrity: sha512-8YKhl8GHiNI/pU2VMaofa2Tor7PJRAjwQLBBuilkJ9L5+13yVbC7JO/wS7piioAvPSwR3JKM1IJ/u4xQzbcXKg==}
@@ -2694,6 +2700,8 @@ snapshots:
       - utf-8-validate
 
   '@pythnetwork/pyth-sdk-js@1.2.0': {}
+
+  '@pythnetwork/pyth-sdk-solidity@2.4.1': {}
 
   '@scure/base@1.1.9': {}
 

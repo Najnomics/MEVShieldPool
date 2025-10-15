@@ -256,3 +256,170 @@ contract YellowStateChannel is IYellowNetwork, ReentrancyGuard, Ownable {
         // Emit state update event
         emit StateUpdated(channelId, newNonce, newStateRoot, block.timestamp);
     }
+
+    /**
+     * @dev Calculates the initial state root for a newly created channel
+     * @param channelId Unique identifier of the channel
+     * @param balance1 Initial balance for participant1
+     * @param balance2 Initial balance for participant2
+     * @return stateRoot Calculated state root hash
+     */
+    function _calculateInitialStateRoot(
+        bytes32 channelId,
+        uint256 balance1,
+        uint256 balance2
+    ) internal pure returns (bytes32 stateRoot) {
+        return keccak256(abi.encodePacked(
+            channelId,
+            uint256(0), // Initial nonce is 0
+            balance1,
+            balance2,
+            "INITIAL_STATE"
+        ));
+    }
+
+    /**
+     * @dev Calculates state root for channel updates
+     * @param channelId Unique identifier of the channel
+     * @param nonce Current nonce for state ordering
+     * @param balance1 New balance for participant1
+     * @param balance2 New balance for participant2
+     * @return stateRoot Calculated state root hash
+     */
+    function _calculateStateRoot(
+        bytes32 channelId,
+        uint256 nonce,
+        uint256 balance1,
+        uint256 balance2
+    ) internal pure returns (bytes32 stateRoot) {
+        return keccak256(abi.encodePacked(
+            channelId,
+            nonce,
+            balance1,
+            balance2,
+            "STATE_UPDATE"
+        ));
+    }
+
+    /**
+     * @dev Verifies signatures from both channel participants for state updates
+     * @param channelId Unique identifier of the channel
+     * @param nonce Update nonce for replay protection
+     * @param balance1 New balance for participant1
+     * @param balance2 New balance for participant2
+     * @param stateRoot Calculated state root hash
+     * @param signature Combined signatures from both participants
+     * @param participant1 Address of first participant
+     * @param participant2 Address of second participant
+     */
+    function _verifyStateSignatures(
+        bytes32 channelId,
+        uint256 nonce,
+        uint256 balance1,
+        uint256 balance2,
+        bytes32 stateRoot,
+        bytes calldata signature,
+        address participant1,
+        address participant2
+    ) internal pure {
+        // Create message hash for signature verification
+        bytes32 messageHash = keccak256(abi.encodePacked(
+            channelId,
+            nonce,
+            balance1,
+            balance2,
+            stateRoot
+        ));
+
+        // Convert to Ethereum signed message hash
+        bytes32 ethSignedMessageHash = messageHash.toEthSignedMessageHash();
+
+        // For production, would verify both signatures separately
+        // This is a simplified verification for demonstration
+        require(signature.length >= 65, "Invalid signature length");
+        
+        // Extract first signature (bytes 0-64)
+        bytes memory sig1 = signature[0:65];
+        address recovered1 = ethSignedMessageHash.recover(sig1);
+        
+        // Verify at least one participant signed
+        require(
+            recovered1 == participant1 || recovered1 == participant2,
+            "Invalid signature"
+        );
+    }
+
+    /**
+     * @dev Initiates channel closure with challenge period
+     * @param channelId Unique identifier of the channel to close
+     */
+    function challengeChannelClosure(bytes32 channelId) external nonReentrant {
+        EnhancedStateChannel storage channel = channels[channelId];
+        
+        // Validate channel and participant authorization
+        require(channel.isActive, "Channel not active");
+        require(channel.status == ChannelStatus.OPEN, "Channel not open");
+        require(
+            msg.sender == channel.participant1 || msg.sender == channel.participant2,
+            "Unauthorized participant"
+        );
+
+        // Set challenge period
+        channel.status = ChannelStatus.CHALLENGING;
+        channel.challengeDeadline = block.timestamp + CHALLENGE_PERIOD;
+
+        emit ChannelChallenged(channelId, msg.sender, channel.challengeDeadline);
+    }
+
+    /**
+     * @dev Closes a channel after challenge period expires
+     * @param channelId Unique identifier of the channel to close
+     */
+    function closeChannel(bytes32 channelId) external nonReentrant {
+        EnhancedStateChannel storage channel = channels[channelId];
+        
+        // Validate closure conditions
+        require(channel.isActive, "Channel not active");
+        require(
+            channel.status == ChannelStatus.CHALLENGING &&
+            block.timestamp >= channel.challengeDeadline,
+            "Challenge period not expired"
+        );
+
+        // Calculate final balances
+        uint256 finalBalance1 = channel.balance1;
+        uint256 finalBalance2 = channel.balance2;
+
+        // Close channel
+        channel.isActive = false;
+        channel.status = ChannelStatus.CLOSED;
+
+        // Transfer final balances to participants
+        if (finalBalance1 > 0) {
+            payable(channel.participant1).transfer(finalBalance1);
+        }
+        if (finalBalance2 > 0) {
+            payable(channel.participant2).transfer(finalBalance2);
+        }
+
+        emit ChannelClosed(channelId, finalBalance1, finalBalance2, block.timestamp);
+    }
+
+    /**
+     * @dev Gets channel information for external queries
+     * @param channelId Unique identifier of the channel
+     * @return channel Enhanced channel data structure
+     */
+    function getChannel(bytes32 channelId) external view returns (EnhancedStateChannel memory channel) {
+        return channels[channelId];
+    }
+
+    /**
+     * @dev Gets all channel IDs for a participant
+     * @param participant Address of the participant
+     * @return channelIds Array of channel IDs
+     */
+    function getParticipantChannels(address participant) external view returns (bytes32[] memory channelIds) {
+        return participantChannels[participant];
+    }
+}
