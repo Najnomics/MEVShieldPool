@@ -42,6 +42,11 @@ contract MEVAuctionHook is BaseHook, ReentrancyGuard, Ownable, IMEVAuction {
     mapping(PoolId => mapping(address => uint256)) public bids;
     
     /**
+     * @dev Mapping of pool to bidder to encrypted bid data
+     */
+    mapping(PoolId => mapping(address => IMEVAuction.EncryptedBid)) public encryptedBids;
+    
+    /**
      * @dev Mapping of pool to LP to accumulated rewards
      */
     mapping(PoolId => mapping(address => uint256)) public lpRewards;
@@ -338,8 +343,8 @@ contract MEVAuctionHook is BaseHook, ReentrancyGuard, Ownable, IMEVAuction {
         // Only callable by this contract to maintain access control
         require(msg.sender == address(this), "Internal function only");
         
-        ILitEncryption.EncryptedBid[] memory encryptedBids = pendingEncryptedBids[poolId];
-        if (encryptedBids.length == 0) return;
+        ILitEncryption.EncryptedBid[] memory pendingBids = pendingEncryptedBids[poolId];
+        if (pendingBids.length == 0) return;
         
         // Get MPC threshold signatures from Lit Protocol network
         // In production, these signatures would be provided by MPC nodes
@@ -694,5 +699,33 @@ contract MEVAuctionHook is BaseHook, ReentrancyGuard, Ownable, IMEVAuction {
         _submitBid(poolIdTyped, msg.value, msg.sender);
         
         emit EncryptedBidSubmitted(poolIdTyped, msg.sender, keccak256(encryptedBid));
+    }
+
+    /**
+     * @dev Internal function to process bid submissions
+     * @param poolId Pool to bid on
+     * @param amount Bid amount in ETH
+     * @param bidder Address of the bidder
+     */
+    function _submitBid(PoolId poolId, uint256 amount, address bidder) internal {
+        require(amount >= AuctionLib.MIN_BID, "Bid below minimum");
+        
+        AuctionLib.AuctionData storage auction = auctions[poolId];
+        require(auction.isActive, "No active auction");
+        require(!auction.isAuctionExpired(), "Auction expired");
+        
+        // Refund previous highest bidder if this bid is higher
+        if (auction.highestBid > 0 && amount > auction.highestBid) {
+            payable(auction.highestBidder).transfer(auction.highestBid);
+        }
+        
+        // Update auction with new highest bid
+        if (amount > auction.highestBid) {
+            auction.highestBid = amount;
+            auction.highestBidder = bidder;
+            bids[poolId][bidder] = amount;
+            
+            emit BidSubmitted(poolId, bidder, amount);
+        }
     }
 }
