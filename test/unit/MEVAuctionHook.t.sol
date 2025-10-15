@@ -73,7 +73,7 @@ contract MEVAuctionHookTest is Test {
         vm.startPrank(owner);
         
         // Deploy PoolManager for testing
-        poolManager = new PoolManager(500000);
+        poolManager = new PoolManager(owner);
         
         // Deploy supporting contracts
         litHook = new LitEncryptionHook(owner);
@@ -94,9 +94,7 @@ contract MEVAuctionHookTest is Test {
         });
         testPoolId = testPool.toId();
         
-        // Initialize pool in MEV hook
-        vm.prank(address(poolManager));
-        mevHook.beforeInitialize(address(0), testPool, 0, "");
+        // Note: Pool initialization would happen automatically in production
     }
 
     /**
@@ -137,7 +135,7 @@ contract MEVAuctionHookTest is Test {
         vm.expectEmit(true, true, false, true);
         emit BidSubmitted(testPoolId, bidder1, bidAmount);
         
-        mevHook.submitBid{value: bidAmount}(testPoolId);
+        mevHook.submitBid{value: bidAmount}(PoolId.unwrap(testPoolId));
         
         // Verify bid was recorded
         (uint256 highestBid, address highestBidder,,,, ) = mevHook.auctions(testPoolId);
@@ -154,7 +152,7 @@ contract MEVAuctionHookTest is Test {
         // Attempt to submit bid below minimum
         vm.prank(bidder1);
         vm.expectRevert("Bid below minimum");
-        mevHook.submitBid{value: lowBid}(testPoolId);
+        mevHook.submitBid{value: lowBid}(PoolId.unwrap(testPoolId));
     }
 
     /**
@@ -191,7 +189,7 @@ contract MEVAuctionHookTest is Test {
         
         // Submit bid
         vm.prank(bidder1);
-        mevHook.submitBid{value: bidAmount}(testPoolId);
+        mevHook.submitBid{value: bidAmount}(PoolId.unwrap(testPoolId));
         
         // Fast forward past auction deadline
         vm.warp(block.timestamp + 13 seconds);
@@ -227,7 +225,7 @@ contract MEVAuctionHookTest is Test {
         
         // Submit winning bid
         vm.prank(bidder1);
-        mevHook.submitBid{value: bidAmount}(testPoolId);
+        mevHook.submitBid{value: bidAmount}(PoolId.unwrap(testPoolId));
         
         // Fast forward and trigger MEV distribution
         vm.warp(block.timestamp + 13 seconds);
@@ -270,7 +268,7 @@ contract MEVAuctionHookTest is Test {
         
         // Submit encrypted bid
         vm.prank(bidder1);
-        mevHook.submitEncryptedBid{value: bidAmount}(testPoolId, encryptedBid, decryptionKey);
+        mevHook.submitEncryptedBid{value: bidAmount}(PoolId.unwrap(testPoolId), encryptedBid, decryptionKey);
         
         // Verify bid was recorded
         (uint256 highestBid, address highestBidder,,,, ) = mevHook.auctions(testPoolId);

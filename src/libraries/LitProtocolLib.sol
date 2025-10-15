@@ -127,7 +127,7 @@ library LitProtocolLib {
             poolId,
             auctionRound,
             timestamp,
-            block.difficulty,
+            block.prevrandao,
             msg.sender
         ));
     }

@@ -7,6 +7,7 @@ import {LitEncryptionHook} from "../../src/hooks/LitEncryptionHook.sol";
 import {PythPriceHook} from "../../src/hooks/PythPriceHook.sol";
 import {YellowStateChannel} from "../../src/hooks/YellowStateChannel.sol";
 import {MockPyth} from "../mocks/MockPyth.sol";
+import {PythStructs} from "@pythnetwork/pyth-sdk-solidity/PythStructs.sol";
 import {IPoolManager} from "@uniswap/v4-core/src/interfaces/IPoolManager.sol";
 import {PoolManager} from "@uniswap/v4-core/src/PoolManager.sol";
 import {PoolKey} from "@uniswap/v4-core/src/types/PoolKey.sol";
@@ -140,8 +141,8 @@ contract MEVAuctionIntegrationTest is Test {
         assertEq(highestBidder, bidder1, "Encrypted bidder should be recorded");
         
         // Verify price feed integration
-        (int64 price,) = pythHook.getLatestPrice(mockPyth.ETH_USD_FEED());
-        assertEq(price, 220000000000, "Price feed should be updated");
+        PythStructs.Price memory price = pythHook.getPrice(mockPyth.ETH_USD_FEED());
+        assertEq(price.price, 220000000000, "Price feed should be updated");
     }
 
     /**
