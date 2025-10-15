@@ -427,7 +427,113 @@ contract MEVAuctionHook is BaseHook, ReentrancyGuard, Ownable, IMEVAuction {
         
         return currentPrice;
     }
+    
+    /**
+     * @dev Determines the appropriate Pyth price feed ID for a pool's token pair
+     * @param key The pool key containing token information
+     * @return priceId The Pyth Network price feed identifier
+     */
+    function _getPriceIdForPool(PoolKey calldata key) internal pure returns (bytes32 priceId) {
+        // Extract token addresses from the pool key
+        address token0 = Currency.unwrap(key.currency0);
+        address token1 = Currency.unwrap(key.currency1);
+        
+        // Default to ETH/USD if we can't determine the specific pair
+        priceId = PythPriceLib.ETH_USD_PRICE_ID;
+        
+        // Check for common token mappings (simplified for demonstration)
+        // In production, this would have a comprehensive mapping system
+        if (token0 == address(0) || token1 == address(0)) {
+            // Native ETH pool
+            priceId = PythPriceLib.ETH_USD_PRICE_ID;
+        } else {
+            // For other tokens, we'd need a registry mapping
+            // This is a simplified approach for the hackathon
+            priceId = PythPriceLib.ETH_USD_PRICE_ID;
+        }
+        
+        return priceId;
+    }
+    
+    /**
+     * @dev Estimates the execution price of a swap based on parameters
+     * @param params The swap parameters
+     * @return estimatedPrice Estimated price after the swap
+     */
+    function _estimateSwapPrice(IPoolManager.SwapParams calldata params) internal pure returns (uint256 estimatedPrice) {
+        // Simplified price estimation based on swap amount and direction
+        // In production, this would use more sophisticated AMM math
+        
+        int256 amountSpecified = params.amountSpecified;
+        bool zeroForOne = params.zeroForOne;
+        
+        // Calculate price impact based on swap size
+        uint256 absAmount = amountSpecified < 0 ? uint256(-amountSpecified) : uint256(amountSpecified);
+        
+        // Simplified price impact calculation (0.1% per 1 ETH)
+        uint256 priceImpact = (absAmount * 1000) / 1e18; // basis points
+        
+        // Base price assumption (simplified)
+        uint256 basePrice = 2000e18; // $2000 USD
+        
+        if (zeroForOne) {
+            // Selling token0 for token1 - price decreases
+            estimatedPrice = basePrice - ((basePrice * priceImpact) / 10000);
+        } else {
+            // Selling token1 for token0 - price increases
+            estimatedPrice = basePrice + ((basePrice * priceImpact) / 10000);
+        }
+        
+        return estimatedPrice;
+    }
+    
+    /**
+     * @dev Calculates potential MEV value from price deviation
+     * @param expectedPrice Expected price from oracle
+     * @param swapPrice Estimated execution price
+     * @param params Swap parameters for volume calculation
+     * @return mevValue Calculated MEV opportunity value
+     */
+    function _calculatePotentialMEV(
+        uint256 expectedPrice,
+        uint256 swapPrice,
+        IPoolManager.SwapParams calldata params
+    ) internal pure returns (uint256 mevValue) {
+        // Calculate absolute price deviation
+        uint256 priceDeviation = expectedPrice > swapPrice 
+            ? expectedPrice - swapPrice 
+            : swapPrice - expectedPrice;
+        
+        // Calculate percentage deviation
+        uint256 deviationBps = (priceDeviation * 10000) / expectedPrice;
+        
+        // Only consider significant deviations (> 0.1%) as MEV opportunities
+        if (deviationBps < 10) {
+            return 0;
+        }
+        
+        // Calculate trade volume
+        uint256 tradeVolume = params.amountSpecified < 0 
+            ? uint256(-params.amountSpecified) 
+            : uint256(params.amountSpecified);
+        
+        // MEV value is percentage of trade volume based on price deviation
+        mevValue = (tradeVolume * deviationBps) / 10000;
+        
+        // Cap MEV value at 5% of trade volume for safety
+        uint256 maxMEV = (tradeVolume * 500) / 10000; // 5%
+        if (mevValue > maxMEV) {
+            mevValue = maxMEV;
+        }
+        
+        return mevValue;
+    }
 
+    /**
+     * @dev Distributes MEV proceeds to LPs and protocol
+     * @param poolId The pool to distribute MEV for
+     * @param amount Total MEV amount to distribute
+     */
     function _distributeMEV(PoolId poolId, uint256 amount) internal {
         uint256 lpAmount = (amount * AuctionLib.LP_SHARE) / 100;
         uint256 protocolAmount = amount - lpAmount;
