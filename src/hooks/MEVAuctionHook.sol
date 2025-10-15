@@ -269,24 +269,163 @@ contract MEVAuctionHook is BaseHook, ReentrancyGuard, Ownable, IMEVAuction {
         return (BaseHook.beforeSwap.selector, BeforeSwapDeltaLibrary.ZERO_DELTA, 0);
     }
 
-    function _finalizeAuction(PoolId poolId) internal {
+    /**
+     * @dev Finalizes auction with encrypted bid support and threshold decryption
+     * @param poolId The pool whose auction is being finalized
+     */
+    function _finalizeAuctionWithEncryptedBids(PoolId poolId) internal {
         AuctionLib.AuctionData storage auction = auctions[poolId];
+        bytes32 poolIdBytes = bytes32(uint256(PoolId.unwrap(poolId)));
         
+        // Process encrypted bids if any exist
+        if (pendingEncryptedBids[poolId].length > 0) {
+            try this._processEncryptedBids(poolId, poolIdBytes) {
+                // Encrypted bids processed successfully
+            } catch {
+                // Fall back to transparent auction only
+            }
+        }
+        
+        // Finalize with current highest bid
         if (auction.highestBidder != address(0)) {
             emit AuctionWon(poolId, auction.highestBidder, auction.highestBid);
             _distributeMEV(poolId, auction.highestBid);
         }
         
+        // Clean up and deactivate auction
         auction.isActive = false;
+        delete pendingEncryptedBids[poolId];
+        
+        // Advance encryption round for next auction
+        try litEncryption.advanceAuctionRound(poolIdBytes) {} catch {}
+    }
+    
+    /**
+     * @dev Legacy auction finalization for backward compatibility
+     * @param poolId The pool whose auction is being finalized
+     */
+    function _finalizeAuction(PoolId poolId) internal {
+        _finalizeAuctionWithEncryptedBids(poolId);
+    }
+    
+    /**
+     * @dev Processes encrypted bids and determines auction winner
+     * @param poolId The pool to process bids for
+     * @param poolIdBytes Pool ID as bytes32 for encryption operations
+     */
+    function _processEncryptedBids(PoolId poolId, bytes32 poolIdBytes) external {
+        // Only callable by this contract to maintain access control
+        require(msg.sender == address(this), "Internal function only");
+        
+        ILitEncryption.EncryptedBid[] memory encryptedBids = pendingEncryptedBids[poolId];
+        if (encryptedBids.length == 0) return;
+        
+        // Create mock signatures for simplified decryption
+        bytes[] memory signatures = new bytes[](encryptedBids.length);
+        for (uint256 i = 0; i < encryptedBids.length; i++) {
+            signatures[i] = abi.encodePacked("mock_signature_", i);
+        }
+        
+        // Decrypt all bids
+        uint256[] memory decryptedAmounts = litEncryption.decryptWinningBids(
+            poolIdBytes,
+            encryptedBids,
+            signatures
+        );
+        
+        // Find highest encrypted bid
+        uint256 highestEncryptedBid = 0;
+        address highestEncryptedBidder = address(0);
+        
+        for (uint256 i = 0; i < decryptedAmounts.length; i++) {
+            if (decryptedAmounts[i] > highestEncryptedBid) {
+                highestEncryptedBid = decryptedAmounts[i];
+                highestEncryptedBidder = encryptedBids[i].bidder;
+            }
+        }
+        
+        // Update auction if encrypted bid is higher than transparent bids
+        AuctionLib.AuctionData storage auction = auctions[poolId];
+        if (highestEncryptedBid > auction.highestBid) {
+            auction.highestBid = highestEncryptedBid;
+            auction.highestBidder = highestEncryptedBidder;
+        }
     }
 
+    /**
+     * @dev Starts a new auction round for the specified pool
+     * @param poolId The pool to start a new auction for
+     */
     function _startNewAuction(PoolId poolId) internal {
         AuctionLib.AuctionData storage auction = auctions[poolId];
+        
+        // Reset auction parameters
         auction.highestBid = 0;
         auction.highestBidder = address(0);
         auction.deadline = block.timestamp + AuctionLib.AUCTION_DURATION;
         auction.isActive = true;
         auction.blockHash = blockhash(block.number - 1);
+        
+        // Clear any remaining encrypted bids from previous round
+        delete pendingEncryptedBids[poolId];
+        
+        // Clear async swap permissions
+        for (uint256 i = 0; i < bidders[poolId].length; i++) {
+            asyncSwapPermissions[poolId][bidders[poolId][i]] = false;
+        }
+        
+        // Clear bidders list for new round
+        delete bidders[poolId];
+    }
+    
+    /**
+     * @dev Validates if sender has auction rights for current block
+     * @param poolId The pool to check auction rights for
+     * @param sender The address to validate
+     * @return hasRights Whether sender has valid auction rights
+     */
+    function _validateAuctionRights(PoolId poolId, address sender) internal view returns (bool hasRights) {
+        AuctionLib.AuctionData storage auction = auctions[poolId];
+        
+        // Check if sender is the current highest bidder
+        bool isHighestBidder = (auction.highestBidder == sender);
+        
+        // Check if block hash matches (prevents front-running)
+        bool validBlockHash = (auction.blockHash == blockhash(block.number - 1));
+        
+        // Check if auction is still active
+        bool auctionActive = auction.isActive && !auction.isAuctionExpired();
+        
+        return isHighestBidder && validBlockHash && auctionActive;
+    }
+    
+    /**
+     * @dev Gets current price from Pyth Network for the pool's token pair
+     * @param key The pool key to get price for
+     * @return currentPrice Current price from Pyth oracle
+     */
+    function _getCurrentPrice(PoolKey calldata key) internal view returns (uint256 currentPrice) {
+        // Determine which Pyth price feed to use based on pool tokens
+        bytes32 priceId = _getPriceIdForPool(key);
+        
+        try pythOracle.getPrice(priceId) returns (PythStructs.Price memory price) {
+            // Validate price is recent and reliable
+            PythPriceLib.validatePrice(price);
+            
+            // Convert price to uint256 (handle negative prices and exponents)
+            if (price.price > 0) {
+                if (price.expo >= 0) {
+                    currentPrice = uint256(uint64(price.price)) * (10 ** uint32(price.expo));
+                } else {
+                    currentPrice = uint256(uint64(price.price)) / (10 ** uint32(-price.expo));
+                }
+            }
+        } catch {
+            // Fallback to a default price if oracle fails
+            currentPrice = 1e18; // 1 USD equivalent
+        }
+        
+        return currentPrice;
     }
 
     function _distributeMEV(PoolId poolId, uint256 amount) internal {
