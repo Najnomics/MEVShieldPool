@@ -32,6 +32,9 @@ importers:
       '@pythnetwork/pyth-sdk-js':
         specifier: ^1.2.0
         version: 1.2.0
+      '@uniswap/v4-core':
+        specifier: ^1.0.2
+        version: 1.0.2
       '@uniswap/v4-periphery':
         specifier: github:Uniswap/v4-periphery
         version: https://codeload.github.com/Uniswap/v4-periphery/tar.gz/60cd93803ac2b7fa65fd6cd351fd5fd4cc8c9db5
@@ -461,6 +464,9 @@ packages:
 
   '@types/ws@8.18.1':
     resolution: {integrity: sha512-ThVF6DCVhA8kUGy+aazFQ4kXQ7E1Ty7A3ypFOe0IcJV8O/M511G99AW24irKrW56Wt44yG9+ij8FaqoBGkuBXg==}
+
+  '@uniswap/v4-core@1.0.2':
+    resolution: {integrity: sha512-X15Tm2wWd+USAzEExMbo+g9naA6QN6mPgWm0MzDwRNlOfaNlepfUpSyt9RSrUfEODspwbyWbcLg6t5nwc/e7lg==}
 
   '@uniswap/v4-periphery@https://codeload.github.com/Uniswap/v4-periphery/tar.gz/60cd93803ac2b7fa65fd6cd351fd5fd4cc8c9db5':
     resolution: {tarball: https://codeload.github.com/Uniswap/v4-periphery/tar.gz/60cd93803ac2b7fa65fd6cd351fd5fd4cc8c9db5}
@@ -2805,6 +2811,8 @@ snapshots:
   '@types/ws@8.18.1':
     dependencies:
       '@types/node': 20.19.21
+
+  '@uniswap/v4-core@1.0.2': {}
 
   '@uniswap/v4-periphery@https://codeload.github.com/Uniswap/v4-periphery/tar.gz/60cd93803ac2b7fa65fd6cd351fd5fd4cc8c9db5': {}
 
