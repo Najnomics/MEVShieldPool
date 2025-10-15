@@ -496,3 +496,165 @@ class AgentStatsResponse(Model):
             opportunity.risk_score = min(opportunity.risk_score + 0.2, 1.0)
         
         return opportunity
+
+    async def _process_opportunity(self, ctx: Context, opportunity: MEVOpportunity):
+        """
+        Process a detected MEV opportunity and take appropriate actions
+        
+        Args:
+            ctx: uAgent context for communication
+            opportunity: The MEV opportunity to process
+        """
+        try:
+            # Add opportunity to detected list
+            self.detected_opportunities.append(opportunity)
+            
+            # Clean up old opportunities (keep only last 100)
+            if len(self.detected_opportunities) > self.config["max_opportunities"]:
+                self.detected_opportunities = self.detected_opportunities[-self.config["max_opportunities"]:]
+            
+            # Send high-risk alerts
+            if opportunity.risk_score >= self.config["risk_threshold"]:
+                await self._send_risk_alert(ctx, opportunity)
+            
+            # Log the opportunity
+            logger.info(f"Processed {opportunity.mev_type} opportunity: "
+                       f"Value={opportunity.estimated_value:.4f} ETH, "
+                       f"Risk={opportunity.risk_score:.2f}, "
+                       f"Pool={opportunity.pool_id[:10]}...")
+                       
+        except Exception as e:
+            logger.error(f"Error processing opportunity: {e}")
+
+    async def _send_risk_alert(self, ctx: Context, opportunity: MEVOpportunity):
+        """
+        Send high-risk MEV alert to connected agents and systems
+        
+        Args:
+            ctx: uAgent context for communication
+            opportunity: High-risk MEV opportunity
+        """
+        try:
+            # Create alert message
+            alert = MEVAlert(
+                pool_id=opportunity.pool_id,
+                mev_type=opportunity.mev_type,
+                estimated_value=opportunity.estimated_value,
+                risk_score=opportunity.risk_score,
+                block_number=opportunity.block_number,
+                transaction_hash=opportunity.transaction_hash
+            )
+            
+            # In production, this would send to registered alert recipients
+            # For demonstration, we log the alert
+            logger.warning(f"HIGH RISK MEV ALERT: {alert}")
+            
+            # Update statistics
+            self.agent_stats["alerts_sent"] += 1
+            
+            # If Agentverse is enabled, broadcast to network
+            if self.config["agentverse_enabled"]:
+                await self._broadcast_to_agentverse(ctx, alert)
+                
+        except Exception as e:
+            logger.error(f"Error sending risk alert: {e}")
+
+    async def _broadcast_to_agentverse(self, ctx: Context, alert: MEVAlert):
+        """
+        Broadcast MEV alert to Agentverse network for agent discovery
+        
+        Args:
+            ctx: uAgent context
+            alert: MEV alert to broadcast
+        """
+        try:
+            # In production, this would use Agentverse API for agent discovery
+            # and send messages to relevant agents in the network
+            
+            # Simulate broadcasting to known agents
+            known_agents = [
+                "agent1qw8ukxr8jdsmt8jz6hgtgf7pjgadr5xw9x4h6w6r7e5v3a9x2g5k7n8m9",  # Example agent address
+                "agent1qx7mhzgp5v8n4j2k3l6m9p8q5r2s7t4u1v6w3x8y5z2a7b4c1d6e9f2g5"   # Another agent address
+            ]
+            
+            for agent_address in known_agents:
+                try:
+                    await ctx.send(agent_address, alert)
+                    logger.info(f"Sent alert to agent: {agent_address[:20]}...")
+                except Exception as send_error:
+                    logger.debug(f"Failed to send to {agent_address}: {send_error}")
+                    
+        except Exception as e:
+            logger.error(f"Agentverse broadcast error: {e}")
+
+    async def _get_current_block(self) -> int:
+        """
+        Get current Ethereum block number
+        
+        Returns:
+            Current block number
+        """
+        try:
+            if self.w3 and self.w3.is_connected():
+                return self.w3.eth.block_number
+            else:
+                # Fallback to simulated block number
+                return int(time.time()) // 12 + 18000000  # Approximate current block
+        except Exception as e:
+            logger.error(f"Error getting block number: {e}")
+            return int(time.time()) // 12 + 18000000
+
+    async def run(self):
+        """
+        Start the MEV Analyzer Agent
+        
+        This method starts the uAgent and begins autonomous operation.
+        The agent will continuously analyze MEV opportunities and 
+        communicate with other agents in the network.
+        """
+        try:
+            logger.info("Starting MEV Analyzer Agent...")
+            logger.info(f"Agent address: {self.agent.address}")
+            logger.info(f"Analysis interval: {self.config['analysis_interval']}s")
+            logger.info(f"Risk threshold: {self.config['risk_threshold']}")
+            
+            # Fund agent if running on testnet
+            await fund_agent_if_low(self.agent.wallet.address())
+            
+            # Start the agent
+            await self.agent.run_async()
+            
+        except KeyboardInterrupt:
+            logger.info("Agent stopped by user")
+        except Exception as e:
+            logger.error(f"Agent runtime error: {e}")
+        finally:
+            logger.info("MEV Analyzer Agent shutdown complete")
+
+# Main execution
+async def main():
+    """
+    Main entry point for the MEV Analyzer Agent
+    
+    Creates and runs the agent with production configuration
+    """
+    # Create agent with unique seed
+    agent = MEVAnalyzerAgent(agent_seed="mevshield_analyzer_2025")
+    
+    # Run the agent
+    await agent.run()
+
+if __name__ == "__main__":
+    """
+    Entry point when script is run directly
+    
+    Usage:
+        python mev_analyzer.py
+    """
+    print("=== MEVShield Pool - MEV Analyzer Agent ===")
+    print("ASI Alliance uAgents Framework Integration")
+    print("Real-time MEV Risk Analysis and Alert System")
+    print("=" * 50)
+    
+    # Run the agent
+    asyncio.run(main())
