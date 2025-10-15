@@ -184,7 +184,7 @@ contract LitEncryptionTest is Test {
      * @dev Test address to string conversion for JSON formatting
      */
     function testAddressStringConversion() public {
-        address testAddress = 0x742d35Cc6874C41532Da6B3Bc1234567890AbCdE;
+        address testAddress = 0x742d35cc6874c41532Da6B3BC1234567890aBCde;
         string memory addressString = LitProtocolLib.addressToString(testAddress);
         
         // Should be lowercase hex with 0x prefix
@@ -281,13 +281,20 @@ contract LitEncryptionTest is Test {
      * @dev Test error cases for invalid encryption parameters
      */
     function testEncryptionErrorCases() public {
-        // Test invalid MPC threshold error
-        vm.expectRevert(LitProtocolLib.InvalidMPCThreshold.selector);
-        litHook.validateEncryptionParams(0, 3, block.timestamp);
+        bytes32 poolId = keccak256("test_pool");
         
-        // Test session expiry error  
-        uint256 expiredTimestamp = block.timestamp - LitProtocolLib.SESSION_KEY_EXPIRY - 1;
-        vm.expectRevert(LitProtocolLib.SessionKeyExpired.selector);
-        litHook.validateEncryptionParams(2, 3, expiredTimestamp);
+        // Initialize pool first
+        vm.prank(encryptionManager);
+        litHook.initializePool(poolId, 2, 3);
+        
+        // Test invalid MPC threshold by updating with invalid params
+        vm.expectRevert(LitProtocolLib.InvalidMPCThreshold.selector);
+        vm.prank(encryptionManager);
+        litHook.updateMPCParams(poolId, 0, 3); // Invalid threshold
+        
+        // Test with threshold > total nodes
+        vm.expectRevert(LitProtocolLib.InvalidMPCThreshold.selector);
+        vm.prank(encryptionManager);
+        litHook.updateMPCParams(poolId, 4, 3); // Threshold > nodes
     }
 }

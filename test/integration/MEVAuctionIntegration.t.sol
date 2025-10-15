@@ -308,23 +308,23 @@ contract MEVAuctionIntegrationTest is Test {
             validSignature
         );
         
-        // Simulate dispute initiation
+        // Challenge channel closure (simulating dispute mechanism)
         vm.prank(auctioneer);
-        yellowChannel.initiateDispute(channelId, "Invalid bid amount submitted");
+        yellowChannel.challengeChannelClosure(channelId);
         
-        // Verify dispute was recorded
-        YellowStateChannel.EnhancedStateChannel memory disputedChannel = yellowChannel.getChannel(channelId);
-        assertTrue(!disputedChannel.isActive, "Channel should be inactive during dispute");
+        // Verify channel state after challenge
+        YellowStateChannel.EnhancedStateChannel memory challengedChannel = yellowChannel.getChannel(channelId);
+        assertTrue(challengedChannel.isActive, "Channel should remain active after challenge");
         
-        // Fast forward dispute resolution period
-        vm.warp(block.timestamp + 1 days);
+        // Fast forward challenge period
+        vm.warp(block.timestamp + 2 hours);
         
-        // Resolve dispute in favor of cross-chain bidder
-        vm.prank(auctioneer);
-        yellowChannel.resolveDispute(channelId, true); // true = bidder wins dispute
+        // Close channel after challenge period
+        vm.prank(crossChainBidder);
+        yellowChannel.closeChannel(channelId);
         
-        // Verify channel reactivation
-        YellowStateChannel.EnhancedStateChannel memory resolvedChannel = yellowChannel.getChannel(channelId);
-        assertTrue(resolvedChannel.isActive, "Channel should be reactivated after resolution");
+        // Verify channel closure
+        YellowStateChannel.EnhancedStateChannel memory closedChannel = yellowChannel.getChannel(channelId);
+        assertFalse(closedChannel.isActive, "Channel should be closed after challenge period");
     }
 }

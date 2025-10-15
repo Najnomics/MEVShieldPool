@@ -288,7 +288,7 @@ contract MEVAuctionHookTest is Test {
         mevHook.submitBid{value: bidAmount}(PoolId.unwrap(testPoolId));
         
         // Verify auction rights are assigned to bidder1
-        (,, address highestBidder,,,, ) = mevHook.auctions(testPoolId);
+        (, address highestBidder,,,,) = mevHook.auctions(testPoolId);
         assertEq(highestBidder, bidder1, "Bidder1 should have auction rights");
         
         // Note: In production, this would be validated in beforeSwap hook
@@ -321,7 +321,7 @@ contract MEVAuctionHookTest is Test {
         mevHook.submitBid{value: bidAmount}(PoolId.unwrap(testPoolId));
         
         // Record initial auction state
-        (uint256 initialBid, address initialBidder, uint256 deadline,, uint256 auctionRound, ) = 
+        (uint256 initialBid, address initialBidder, uint256 deadline, bool isActive, bytes32 blockHash, uint256 totalMEV) = 
             mevHook.auctions(testPoolId);
         
         // Fast forward past deadline
@@ -352,8 +352,8 @@ contract MEVAuctionHookTest is Test {
      * @dev Test auction round progression
      */
     function testAuctionRoundProgression() public {
-        // Get initial auction round
-        (,,,,, uint256 initialRound, ) = mevHook.auctions(testPoolId);
+        // Get initial auction state  
+        (,,,, bytes32 initialBlockHash,) = mevHook.auctions(testPoolId);
         
         // Submit bid and finalize auction by time progression
         vm.prank(bidder1);
@@ -363,9 +363,9 @@ contract MEVAuctionHookTest is Test {
         vm.warp(block.timestamp + 13 seconds);
         
         // Note: In production, new round would be triggered by beforeSwap hook
-        // For testing, we verify current round state
-        (,,,,, uint256 currentRound, ) = mevHook.auctions(testPoolId);
-        assertEq(currentRound, initialRound, "Round should remain same until triggered");
+        // For testing, we verify current block hash state
+        (,,,, bytes32 currentBlockHash,) = mevHook.auctions(testPoolId);
+        assertEq(currentBlockHash, initialBlockHash, "Block hash should remain same until triggered");
     }
 }
 

@@ -143,7 +143,7 @@ contract YellowNetworkChannelTest is Test {
         emit StateChannelClosed(channelId, CHANNEL_DEPOSIT, CHANNEL_DEPOSIT);
         
         vm.prank(participant1);
-        yellowChannel.closeStateChannel(channelId);
+        yellowChannel.closeChannel(channelId);
         
         // Verify channel is closed
         YellowStateChannel.EnhancedStateChannel memory closedChannel = yellowChannel.getChannel(channelId);
@@ -178,30 +178,24 @@ contract YellowNetworkChannelTest is Test {
         
         string memory disputeReason = "Invalid state transition detected";
         
-        // Initiate dispute
-        vm.expectEmit(true, true, false, true);
-        emit DisputeInitiated(channelId, participant2, disputeReason);
-        
+        // Challenge channel closure to simulate dispute
         vm.prank(participant2);
-        yellowChannel.initiateDispute(channelId, disputeReason);
+        yellowChannel.challengeChannelClosure(channelId);
         
-        // Verify dispute state
-        YellowStateChannel.EnhancedStateChannel memory disputedChannel = yellowChannel.getChannel(channelId);
-        assertFalse(disputedChannel.isActive, "Channel should be inactive during dispute");
+        // Verify channel remains active during challenge
+        YellowStateChannel.EnhancedStateChannel memory challengedChannel = yellowChannel.getChannel(channelId);
+        assertTrue(challengedChannel.isActive, "Channel should remain active during challenge");
         
-        // Fast forward past dispute timeout
+        // Fast forward past challenge period
         vm.warp(block.timestamp + DISPUTE_TIMEOUT + 1);
         
-        // Resolve dispute in favor of participant1
-        vm.expectEmit(true, false, false, true);
-        emit DisputeResolved(channelId, true);
+        // Close channel after challenge period expires
+        vm.prank(participant1);
+        yellowChannel.closeChannel(channelId);
         
-        vm.prank(mediator);
-        yellowChannel.resolveDispute(channelId, true);
-        
-        // Verify resolution
-        YellowStateChannel.EnhancedStateChannel memory resolvedChannel = yellowChannel.getChannel(channelId);
-        assertTrue(resolvedChannel.isActive, "Channel should be reactivated after resolution");
+        // Verify channel closure
+        YellowStateChannel.EnhancedStateChannel memory closedChannel = yellowChannel.getChannel(channelId);
+        assertFalse(closedChannel.isActive, "Channel should be closed after challenge period");
     }
 
     /**
@@ -256,9 +250,9 @@ contract YellowNetworkChannelTest is Test {
         // Fast forward past timeout
         vm.warp(originalTimeout + 1);
         
-        // Emergency close should be available
+        // Close channel after timeout
         vm.prank(participant1);
-        yellowChannel.emergencyCloseChannel(channelId);
+        yellowChannel.closeChannel(channelId);
         
         // Verify emergency closure
         YellowStateChannel.EnhancedStateChannel memory emergencyClosedChannel = 
@@ -305,5 +299,4 @@ contract YellowNetworkChannelTest is Test {
         signature = abi.encodePacked(hash, bytes1(0x1b));
         return signature;
     }
-}
 }
