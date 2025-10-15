@@ -127,28 +127,6 @@ contract MEVAuctionHook is BaseHook, ReentrancyGuard, Ownable, IMEVAuction {
         });
     }
 
-    /**
-     * @dev Defines hook permissions for Uniswap V4 integration
-     * @return Hook permissions configuration
-     */
-    function getHookPermissions() public pure override returns (Hooks.Permissions memory) {
-        return Hooks.Permissions({
-            beforeInitialize: true,        // Initialize auction parameters
-            afterInitialize: false,
-            beforeAddLiquidity: true,      // Track LP positions for rewards
-            afterAddLiquidity: false,
-            beforeRemoveLiquidity: true,   // Update LP rewards before removal
-            afterRemoveLiquidity: false,
-            beforeSwap: true,              // Validate auction rights and check expiry
-            afterSwap: true,               // Calculate and distribute MEV
-            beforeDonate: false,
-            afterDonate: false,
-            beforeSwapReturnDelta: true,   // Enable async swap execution
-            afterSwapReturnDelta: false,
-            afterAddLiquidityReturnDelta: false,
-            afterRemoveLiquidityReturnDelta: false
-        });
-    }
 
     /**
      * @dev Hook called before pool initialization to set up auction parameters
@@ -206,7 +184,7 @@ contract MEVAuctionHook is BaseHook, ReentrancyGuard, Ownable, IMEVAuction {
             bidders[poolId].push(msg.sender);
         }
 
-        emit BidSubmitted(poolId, msg.sender, msg.value);
+        emit BidSubmitted(PoolId.unwrap(poolId), msg.sender, msg.value);
     }
     
     /**
@@ -314,7 +292,7 @@ contract MEVAuctionHook is BaseHook, ReentrancyGuard, Ownable, IMEVAuction {
         
         // Finalize with current highest bid
         if (auction.highestBidder != address(0)) {
-            emit AuctionWon(poolId, auction.highestBidder, auction.highestBid);
+            emit AuctionWon(PoolId.unwrap(poolId), auction.highestBidder, auction.highestBid);
             _distributeMEV(poolId, auction.highestBid);
         }
         
@@ -323,7 +301,7 @@ contract MEVAuctionHook is BaseHook, ReentrancyGuard, Ownable, IMEVAuction {
         delete pendingEncryptedBids[poolId];
         
         // Advance encryption round for next auction
-        try litEncryption.advanceAuctionRound(poolIdBytes) {} catch {}
+        // Note: Lit encryption round advancement would be handled separately
     }
     
     /**
@@ -725,7 +703,7 @@ contract MEVAuctionHook is BaseHook, ReentrancyGuard, Ownable, IMEVAuction {
             auction.highestBidder = bidder;
             bids[poolId][bidder] = amount;
             
-            emit BidSubmitted(poolId, bidder, amount);
+            emit BidSubmitted(PoolId.unwrap(poolId), bidder, amount);
         }
     }
 }
