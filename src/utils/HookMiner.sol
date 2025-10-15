@@ -142,4 +142,3 @@ library HookMiner {
                FLAG_AFTER_DONATE_RETURNS_DELTA;
     }
 }
-}
