@@ -138,7 +138,7 @@ contract Deploy is Script {
         
         // 1. Deploy PoolManager if not exists (for testing)
         if (config.poolManagerAddress == address(0)) {
-            deployed.poolManager = address(new PoolManager(500000)); // 500k gas limit
+            deployed.poolManager = address(new PoolManager(config.deployer)); // Pass deployer as owner
             emit ContractDeployed("PoolManager", deployed.poolManager, config.chainId);
             console.log("PoolManager deployed at:", deployed.poolManager);
         } else {
