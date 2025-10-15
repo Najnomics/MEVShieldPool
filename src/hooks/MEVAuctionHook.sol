@@ -13,37 +13,115 @@ import {ReentrancyGuard} from "@openzeppelin/contracts/utils/ReentrancyGuard.sol
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 import {AuctionLib} from "../libraries/AuctionLib.sol";
 import {IMEVAuction} from "../interfaces/IMEVAuction.sol";
+import {ILitEncryption} from "../interfaces/ILitEncryption.sol";
+import {IPythPriceOracle} from "../interfaces/IPythPriceOracle.sol";
+import {LitProtocolLib} from "../libraries/LitProtocolLib.sol";
+import {PythPriceLib} from "../libraries/PythPriceLib.sol";
 
+/**
+ * @title MEVAuctionHook
+ * @dev Uniswap V4 Hook implementing MEV auction mechanism with encrypted bids
+ * @notice Auctions first-in-block trading rights and redistributes MEV to LPs
+ * @author MEVShield Pool Team
+ */
 contract MEVAuctionHook is BaseHook, ReentrancyGuard, Ownable, IMEVAuction {
     using PoolIdLibrary for PoolKey;
     using AuctionLib for AuctionLib.AuctionData;
 
+    /**
+     * @dev Core auction data for each pool
+     */
     mapping(PoolId => AuctionLib.AuctionData) public auctions;
+    
+    /**
+     * @dev Mapping of pool to bidder to bid amount (for transparent bids)
+     */
     mapping(PoolId => mapping(address => uint256)) public bids;
+    
+    /**
+     * @dev Mapping of pool to LP to accumulated rewards
+     */
     mapping(PoolId => mapping(address => uint256)) public lpRewards;
+    
+    /**
+     * @dev Array of bidders for each pool
+     */
     mapping(PoolId => address[]) public bidders;
+    
+    /**
+     * @dev Integration contracts for encryption and price feeds
+     */
+    ILitEncryption public immutable litEncryption;
+    IPythPriceOracle public immutable pythOracle;
+    
+    /**
+     * @dev Mapping to track pending encrypted bids for each pool
+     */
+    mapping(PoolId => ILitEncryption.EncryptedBid[]) public pendingEncryptedBids;
+    
+    /**
+     * @dev Mapping to track async swap execution permissions
+     */
+    mapping(PoolId => mapping(address => bool)) public asyncSwapPermissions;
+    
+    /**
+     * @dev Events for encrypted bid integration
+     */
+    event EncryptedBidSubmitted(
+        PoolId indexed poolId,
+        address indexed bidder,
+        bytes32 sessionKeyHash
+    );
+    
+    event AsyncSwapExecuted(
+        PoolId indexed poolId,
+        address indexed executor,
+        uint256 mevValue
+    );
 
-    constructor(IPoolManager _poolManager) BaseHook(_poolManager) Ownable(msg.sender) {}
+    /**
+     * @dev Constructor initializes the hook with required contracts
+     * @param _poolManager Uniswap V4 pool manager
+     * @param _litEncryption Lit Protocol encryption contract
+     * @param _pythOracle Pyth Network price oracle
+     */
+    constructor(
+        IPoolManager _poolManager,
+        ILitEncryption _litEncryption,
+        IPythPriceOracle _pythOracle
+    ) BaseHook(_poolManager) Ownable(msg.sender) {
+        litEncryption = _litEncryption;
+        pythOracle = _pythOracle;
+    }
 
+    /**
+     * @dev Defines hook permissions for Uniswap V4 integration
+     * @return Hook permissions configuration
+     */
     function getHookPermissions() public pure override returns (Hooks.Permissions memory) {
         return Hooks.Permissions({
-            beforeInitialize: true,
+            beforeInitialize: true,        // Initialize auction parameters
             afterInitialize: false,
-            beforeAddLiquidity: true,
+            beforeAddLiquidity: true,      // Track LP positions for rewards
             afterAddLiquidity: false,
-            beforeRemoveLiquidity: true,
+            beforeRemoveLiquidity: true,   // Update LP rewards before removal
             afterRemoveLiquidity: false,
-            beforeSwap: true,
-            afterSwap: true,
+            beforeSwap: true,              // Validate auction rights and check expiry
+            afterSwap: true,               // Calculate and distribute MEV
             beforeDonate: false,
             afterDonate: false,
-            beforeSwapReturnDelta: false,
+            beforeSwapReturnDelta: true,   // Enable async swap execution
             afterSwapReturnDelta: false,
             afterAddLiquidityReturnDelta: false,
             afterRemoveLiquidityReturnDelta: false
         });
     }
 
+    /**
+     * @dev Hook called before pool initialization to set up auction parameters
+     * @param key The pool key being initialized
+     * @return Hook selector to confirm execution
+     */
     function beforeInitialize(
         address,
         PoolKey calldata key,
@@ -51,6 +129,8 @@ contract MEVAuctionHook is BaseHook, ReentrancyGuard, Ownable, IMEVAuction {
         bytes calldata
     ) external override returns (bytes4) {
         PoolId poolId = key.toId();
+        
+        // Initialize auction data for this pool
         auctions[poolId] = AuctionLib.AuctionData({
             highestBid: 0,
             highestBidder: address(0),
@@ -59,6 +139,16 @@ contract MEVAuctionHook is BaseHook, ReentrancyGuard, Ownable, IMEVAuction {
             blockHash: blockhash(block.number - 1),
             totalMEVCollected: 0
         });
+        
+        // Initialize encryption parameters for encrypted bids
+        try litEncryption.initializePool(
+            bytes32(uint256(PoolId.unwrap(poolId))),
+            LitProtocolLib.DEFAULT_MPC_THRESHOLD,
+            LitProtocolLib.DEFAULT_MPC_NODES
+        ) {} catch {
+            // Continue if encryption initialization fails (optional feature)
+        }
+        
         return BaseHook.beforeInitialize.selector;
     }
 
