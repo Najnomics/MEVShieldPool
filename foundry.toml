@@ -1,7 +1,7 @@
 [profile.default]
 src = "src"
 out = "out"
-libs = ["lib"]
+libs = ["node_modules", "lib"]
 solc_version = "0.8.26"
 evm_version = "cancun"
 optimizer_runs = 800
@@ -11,6 +11,7 @@ ffi = true
 [dependencies]
 forge-std = "^1.0.0"
 openzeppelin-contracts = "^5.0.2"
+"@pythnetwork/pyth-sdk-solidity" = "2.2.0"
 
 [profile.ci]
 fuzz = { runs = 10_000 }
