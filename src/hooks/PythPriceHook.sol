@@ -27,4 +27,20 @@ contract PythPriceHook is IPythPriceOracle {
         require(msg.value >= fee, "Insufficient fee");
         pyth.updatePriceFeeds{value: fee}(updateData);
     }
+
+    function getUpdateFee(bytes[] calldata updateData) external view returns (uint256) {
+        return pyth.getUpdateFee(updateData);
+    }
+
+    function analyzeMEVOpportunity(
+        bytes32 feedId,
+        int64 currentPrice,
+        uint256 swapAmount
+    ) external pure returns (uint256 estimatedMEV, bool profitable) {
+        // Basic MEV calculation - can be enhanced with more sophisticated algorithms
+        uint256 priceImpact = (swapAmount * 100) / 1000000; // 0.01% per million units
+        estimatedMEV = uint256(uint64(currentPrice)) * priceImpact / 10000;
+        profitable = estimatedMEV > 0.001 ether; // Minimum MEV threshold
+        return (estimatedMEV, profitable);
+    }
 }

@@ -81,6 +81,8 @@ contract MEVAuctionHook is BaseHook, ReentrancyGuard, Ownable, IMEVAuction {
         address indexed executor,
         uint256 mevValue
     );
+    
+    event MEVDetected(PoolId indexed poolId, uint256 mevValue);
 
     /**
      * @dev Constructor initializes the hook with required contracts
@@ -95,6 +97,29 @@ contract MEVAuctionHook is BaseHook, ReentrancyGuard, Ownable, IMEVAuction {
     ) BaseHook(_poolManager) Ownable(msg.sender) {
         litEncryption = _litEncryption;
         pythOracle = _pythOracle;
+    }
+
+    /**
+     * @dev Define which hooks are implemented by this contract
+     * @return permissions Struct defining which hooks are active
+     */
+    function getHookPermissions() public pure override returns (Hooks.Permissions memory) {
+        return Hooks.Permissions({
+            beforeInitialize: true,
+            afterInitialize: false,
+            beforeAddLiquidity: true,
+            afterAddLiquidity: false,
+            beforeRemoveLiquidity: true,
+            afterRemoveLiquidity: false,
+            beforeSwap: true,
+            afterSwap: true,
+            beforeDonate: false,
+            afterDonate: false,
+            beforeSwapReturnDelta: false,
+            afterSwapReturnDelta: false,
+            afterAddLiquidityReturnDelta: false,
+            afterRemoveLiquidityReturnDelta: false
+        });
     }
 
     /**
@@ -125,12 +150,12 @@ contract MEVAuctionHook is BaseHook, ReentrancyGuard, Ownable, IMEVAuction {
      * @param key The pool key being initialized
      * @return Hook selector to confirm execution
      */
-    function beforeInitialize(
+    function _beforeInitialize(
         address,
         PoolKey calldata key,
         uint160,
         bytes calldata
-    ) external override returns (bytes4) {
+    ) internal override returns (bytes4) {
         PoolId poolId = key.toId();
         
         // Initialize auction data for this pool
@@ -143,14 +168,7 @@ contract MEVAuctionHook is BaseHook, ReentrancyGuard, Ownable, IMEVAuction {
             totalMEVCollected: 0
         });
         
-        // Initialize encryption parameters for encrypted bids
-        try litEncryption.initializePool(
-            bytes32(uint256(PoolId.unwrap(poolId))),
-            LitProtocolLib.DEFAULT_MPC_THRESHOLD,
-            LitProtocolLib.DEFAULT_MPC_NODES
-        ) {} catch {
-            // Continue if encryption initialization fails (optional feature)
-        }
+        // Note: Lit encryption setup would be done through separate initialization
         
         return BaseHook.beforeInitialize.selector;
     }
@@ -235,12 +253,12 @@ contract MEVAuctionHook is BaseHook, ReentrancyGuard, Ownable, IMEVAuction {
      * @param key Pool key for the swap
      * @return Hook selector, swap delta, and dynamic fee
      */
-    function beforeSwap(
+    function _beforeSwap(
         address sender,
         PoolKey calldata key,
         SwapParams calldata params,
         bytes calldata
-    ) external override returns (bytes4, BeforeSwapDelta, uint24) {
+    ) internal override returns (bytes4, BeforeSwapDelta, uint24) {
         PoolId poolId = key.toId();
         AuctionLib.AuctionData storage auction = auctions[poolId];
 
@@ -594,13 +612,13 @@ contract MEVAuctionHook is BaseHook, ReentrancyGuard, Ownable, IMEVAuction {
         emit MEVDistributed(poolId, lpAmount, protocolAmount);
     }
 
-    function afterSwap(
+    function _afterSwap(
         address,
         PoolKey calldata key,
         SwapParams calldata,
         BalanceDelta delta,
         bytes calldata
-    ) external override returns (bytes4, int128) {
+    ) internal override returns (bytes4, int128) {
         PoolId poolId = key.toId();
         
         int128 amount0Delta = delta.amount0();
@@ -623,21 +641,58 @@ contract MEVAuctionHook is BaseHook, ReentrancyGuard, Ownable, IMEVAuction {
         return (absAmount0 + absAmount1) / 1000;
     }
     
-    function beforeAddLiquidity(
+    function _beforeAddLiquidity(
         address,
         PoolKey calldata,
         ModifyLiquidityParams calldata,
         bytes calldata
-    ) external override returns (bytes4) {
+    ) internal override returns (bytes4) {
         return BaseHook.beforeAddLiquidity.selector;
     }
     
-    function beforeRemoveLiquidity(
+    function _beforeRemoveLiquidity(
         address,
         PoolKey calldata,
         ModifyLiquidityParams calldata,
         bytes calldata
-    ) external override returns (bytes4) {
+    ) internal override returns (bytes4) {
         return BaseHook.beforeRemoveLiquidity.selector;
+    }
+
+    /**
+     * @dev Submit a bid for MEV auction rights on specific pool
+     * @param poolId The pool identifier to bid on
+     */
+    function submitBid(bytes32 poolId) external payable {
+        PoolId poolIdTyped = PoolId.wrap(poolId);
+        _submitBid(poolIdTyped, msg.value, msg.sender);
+    }
+
+    /**
+     * @dev Submit an encrypted bid using Lit Protocol MPC/TSS
+     * @param poolId The pool identifier to bid on
+     * @param encryptedBid Encrypted bid data
+     * @param decryptionKey Key for decrypting the bid
+     */
+    function submitEncryptedBid(
+        bytes32 poolId,
+        bytes calldata encryptedBid,
+        bytes calldata decryptionKey
+    ) external payable {
+        PoolId poolIdTyped = PoolId.wrap(poolId);
+        
+        // Store encrypted bid for later decryption
+        encryptedBids[poolIdTyped][msg.sender] = IMEVAuction.EncryptedBid({
+            bidder: msg.sender,
+            encryptedAmount: encryptedBid,
+            decryptionKey: decryptionKey,
+            timestamp: block.timestamp,
+            revealed: false
+        });
+        
+        // Process bid with current value
+        _submitBid(poolIdTyped, msg.value, msg.sender);
+        
+        emit EncryptedBidSubmitted(poolIdTyped, msg.sender, keccak256(encryptedBid));
     }
 }
