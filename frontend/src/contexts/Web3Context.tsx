@@ -184,3 +184,306 @@ export const Web3Provider: React.FC<{ children: ReactNode }> = ({ children }) =>
       },
     };
   }, [chain?.id]);
+
+  // Submit encrypted bid to MEV auction
+  const submitBid = async (poolId: string, amount: bigint, encrypted = true): Promise<string> => {
+    if (!isConnected || !walletClient || !contracts.mevAuctionHook) {
+      throw new Error('Wallet not connected');
+    }
+
+    setIsSubmittingBid(true);
+    try {
+      let bidHash: string;
+
+      if (encrypted) {
+        // Encrypt bid using Lit Protocol
+        const encryptedBid = await walletClient.writeContract({
+          address: contracts.litMPCManager.address,
+          abi: contracts.litMPCManager.abi,
+          functionName: 'encryptBid',
+          args: [poolId, amount, '[]'], // Empty access conditions for demo
+        });
+        bidHash = encryptedBid;
+      } else {
+        // Submit regular bid
+        const bidTx = await walletClient.writeContract({
+          address: contracts.mevAuctionHook.address,
+          abi: contracts.mevAuctionHook.abi,
+          functionName: 'submitBid',
+          args: [poolId],
+          value: amount,
+        });
+        bidHash = bidTx;
+      }
+
+      toast.success('Bid submitted successfully!');
+      await refreshData();
+      return bidHash;
+    } catch (error) {
+      console.error('Error submitting bid:', error);
+      toast.error('Failed to submit bid');
+      throw error;
+    } finally {
+      setIsSubmittingBid(false);
+    }
+  };
+
+  // Create new liquidity pool
+  const createPool = async (token0: Address, token1: Address, fee: number): Promise<string> => {
+    if (!isConnected || !walletClient || !contracts.mevAuctionHook) {
+      throw new Error('Wallet not connected');
+    }
+
+    setIsCreatingPool(true);
+    try {
+      const poolTx = await walletClient.writeContract({
+        address: contracts.mevAuctionHook.address,
+        abi: contracts.mevAuctionHook.abi,
+        functionName: 'createPool',
+        args: [token0, token1, fee],
+      });
+
+      toast.success('Pool created successfully!');
+      await refreshData();
+      return poolTx;
+    } catch (error) {
+      console.error('Error creating pool:', error);
+      toast.error('Failed to create pool');
+      throw error;
+    } finally {
+      setIsCreatingPool(false);
+    }
+  };
+
+  // Execute auction and settle bids
+  const executeAuction = async (auctionId: string): Promise<boolean> => {
+    if (!isConnected || !walletClient || !contracts.mevAuctionHook) {
+      throw new Error('Wallet not connected');
+    }
+
+    try {
+      await walletClient.writeContract({
+        address: contracts.mevAuctionHook.address,
+        abi: contracts.mevAuctionHook.abi,
+        functionName: 'executeAuction',
+        args: [auctionId],
+      });
+
+      toast.success('Auction executed successfully!');
+      await refreshData();
+      return true;
+    } catch (error) {
+      console.error('Error executing auction:', error);
+      toast.error('Failed to execute auction');
+      return false;
+    }
+  };
+
+  // Get price data from Pyth Network
+  const getPriceData = async (priceId: string): Promise<any> => {
+    if (!publicClient || !contracts.pythPriceOracle) {
+      throw new Error('Client not available');
+    }
+
+    try {
+      const priceData = await publicClient.readContract({
+        address: contracts.pythPriceOracle.address,
+        abi: contracts.pythPriceOracle.abi,
+        functionName: 'getPrice',
+        args: [priceId],
+      });
+
+      return priceData;
+    } catch (error) {
+      console.error('Error getting price data:', error);
+      throw error;
+    }
+  };
+
+  // Upload data to Lighthouse Storage
+  const uploadToLighthouse = async (data: Uint8Array, encrypted = false): Promise<string> => {
+    if (!isConnected || !walletClient || !contracts.lighthouseStorage) {
+      throw new Error('Wallet not connected');
+    }
+
+    try {
+      const uploadTx = await walletClient.writeContract({
+        address: contracts.lighthouseStorage.address,
+        abi: contracts.lighthouseStorage.abi,
+        functionName: 'uploadFile',
+        args: [data, 'application/octet-stream', 0, encrypted, []],
+      });
+
+      toast.success('File uploaded to Lighthouse!');
+      return uploadTx;
+    } catch (error) {
+      console.error('Error uploading to Lighthouse:', error);
+      toast.error('Failed to upload file');
+      throw error;
+    }
+  };
+
+  // Deploy Blockscout explorer
+  const deployBlockscoutExplorer = async (config: any): Promise<string> => {
+    if (!isConnected || !walletClient || !contracts.blockscoutManager) {
+      throw new Error('Wallet not connected');
+    }
+
+    try {
+      const deployTx = await walletClient.writeContract({
+        address: contracts.blockscoutManager.address,
+        abi: contracts.blockscoutManager.abi,
+        functionName: 'deployAutoscoutExplorer',
+        args: [
+          config.explorerName,
+          config.chainName,
+          config.chainId,
+          config.rpcUrl,
+          config.currency,
+          config.isTestnet,
+          config.logoUrl,
+          config.brandColor,
+        ],
+      });
+
+      toast.success('Blockscout explorer deployment initiated!');
+      return deployTx;
+    } catch (error) {
+      console.error('Error deploying explorer:', error);
+      toast.error('Failed to deploy explorer');
+      throw error;
+    }
+  };
+
+  // Refresh all data from contracts
+  const refreshData = async (): Promise<void> => {
+    if (!publicClient || !isConnected) return;
+
+    setIsLoading(true);
+    try {
+      // Fetch pool data
+      const poolsData = await publicClient.readContract({
+        address: contracts.mevAuctionHook?.address,
+        abi: contracts.mevAuctionHook?.abi,
+        functionName: 'getAllPools',
+        args: [],
+      });
+
+      // Fetch active auctions
+      const auctionsData = await publicClient.readContract({
+        address: contracts.mevAuctionHook?.address,
+        abi: contracts.mevAuctionHook?.abi,
+        functionName: 'getActiveAuctions',
+        args: [],
+      });
+
+      // Fetch user bids if connected
+      let userBidsData: any[] = [];
+      if (address) {
+        userBidsData = await publicClient.readContract({
+          address: contracts.mevAuctionHook?.address,
+          abi: contracts.mevAuctionHook?.abi,
+          functionName: 'getUserBids',
+          args: [address],
+        });
+      }
+
+      // Fetch MEV metrics
+      const metricsData = await publicClient.readContract({
+        address: contracts.mevAuctionHook?.address,
+        abi: contracts.mevAuctionHook?.abi,
+        functionName: 'getMEVMetrics',
+        args: [],
+      });
+
+      // Update state
+      setPools(poolsData || []);
+      setActiveAuctions(auctionsData || []);
+      setUserBids(userBidsData || []);
+      setMevMetrics(metricsData || {
+        totalMEVPrevented: 0n,
+        totalAuctions: 0,
+        averageAuctionTime: 0,
+        topPools: [],
+      });
+
+    } catch (error) {
+      console.error('Error refreshing data:', error);
+      toast.error('Failed to refresh data');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Auto-refresh data when connection changes
+  useEffect(() => {
+    if (isConnected && contracts.mevAuctionHook) {
+      refreshData();
+    }
+  }, [isConnected, chain?.id, address]);
+
+  // Auto-refresh data periodically
+  useEffect(() => {
+    const interval = setInterval(() => {
+      if (isConnected && contracts.mevAuctionHook) {
+        refreshData();
+      }
+    }, 30000); // Refresh every 30 seconds
+
+    return () => clearInterval(interval);
+  }, [isConnected, contracts.mevAuctionHook]);
+
+  // Computed values
+  const activePools = pools.filter(pool => pool.isActive);
+
+  // Context value
+  const contextValue: Web3ContextType = {
+    // Connection state
+    isConnected,
+    address,
+    chainId: chain?.id,
+
+    // Contract instances
+    contracts,
+
+    // Pool management
+    pools,
+    activePools,
+
+    // Auction data
+    activeAuctions,
+    userBids,
+
+    // MEV metrics
+    mevMetrics,
+
+    // Functions
+    submitBid,
+    createPool,
+    executeAuction,
+    getPriceData,
+    uploadToLighthouse,
+    deployBlockscoutExplorer,
+    refreshData,
+
+    // Loading states
+    isLoading,
+    isSubmittingBid,
+    isCreatingPool,
+  };
+
+  return (
+    <Web3Context.Provider value={contextValue}>
+      {children}
+    </Web3Context.Provider>
+  );
+};
+
+// Custom hook to use Web3 context
+export const useWeb3 = (): Web3ContextType => {
+  const context = useContext(Web3Context);
+  if (context === undefined) {
+    throw new Error('useWeb3 must be used within a Web3Provider');
+  }
+  return context;
+};
