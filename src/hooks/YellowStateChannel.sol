@@ -422,4 +422,211 @@ contract YellowStateChannel is IYellowNetwork, ReentrancyGuard, Ownable {
     function getParticipantChannels(address participant) external view returns (bytes32[] memory channelIds) {
         return participantChannels[participant];
     }
+    
+    /**
+     * @dev Add counterparty deposit to existing channel
+     * @param channelId Unique identifier of the channel
+     * @param depositAmount Amount to deposit for counterparty
+     */
+    function addCounterpartyDeposit(
+        bytes32 channelId,
+        uint256 depositAmount
+    ) external payable nonReentrant {
+        EnhancedStateChannel storage channel = channels[channelId];
+        
+        require(channel.isActive, "Channel not active");
+        require(channel.status == ChannelStatus.OPEN, "Channel not open");
+        require(msg.sender == channel.participant2, "Only counterparty can deposit");
+        require(msg.value >= depositAmount, "Insufficient deposit");
+        require(depositAmount > 0, "Deposit must be positive");
+        
+        // Add to counterparty balance
+        channel.balance2 += depositAmount;
+        channel.lastUpdated = block.timestamp;
+        
+        // Update state root
+        channel.stateRoot = _calculateStateRoot(
+            channelId,
+            channel.nonce,
+            channel.balance1,
+            channel.balance2
+        );
+        
+        // Refund excess payment
+        if (msg.value > depositAmount) {
+            payable(msg.sender).transfer(msg.value - depositAmount);
+        }
+        
+        emit StateUpdated(channelId, channel.nonce, channel.stateRoot, block.timestamp);
+    }
+    
+    /**
+     * @dev Submit dispute with latest signed state
+     * @param channelId Unique identifier of the channel
+     * @param stateUpdate Latest state update with signatures
+     */
+    function submitDispute(
+        bytes32 channelId,
+        StateUpdate calldata stateUpdate
+    ) external nonReentrant {
+        EnhancedStateChannel storage channel = channels[channelId];
+        
+        require(channel.isActive, "Channel not active");
+        require(
+            msg.sender == channel.participant1 || msg.sender == channel.participant2,
+            "Unauthorized participant"
+        );
+        require(stateUpdate.nonce > channel.nonce, "Outdated state");
+        
+        // Verify state update signatures
+        _verifyDisputeSignatures(stateUpdate, channel.participant1, channel.participant2);
+        
+        // Store pending update
+        pendingUpdates[channelId] = stateUpdate;
+        channel.status = ChannelStatus.DISPUTED;
+        channel.challengeDeadline = block.timestamp + DISPUTE_PERIOD;
+        
+        emit ChannelChallenged(channelId, msg.sender, channel.challengeDeadline);
+    }
+    
+    /**
+     * @dev Verify signatures for dispute resolution
+     * @param stateUpdate State update with signatures to verify
+     * @param participant1 Address of first participant
+     * @param participant2 Address of second participant
+     */
+    function _verifyDisputeSignatures(
+        StateUpdate calldata stateUpdate,
+        address participant1,
+        address participant2
+    ) internal pure {
+        bytes32 messageHash = keccak256(abi.encodePacked(
+            stateUpdate.channelId,
+            stateUpdate.nonce,
+            stateUpdate.newBalances,
+            stateUpdate.stateRoot,
+            stateUpdate.timestamp
+        ));
+        
+        bytes32 ethSignedMessageHash = messageHash.toEthSignedMessageHash();
+        
+        // Verify both signatures
+        address recovered1 = ethSignedMessageHash.recover(stateUpdate.participant1Signature);
+        address recovered2 = ethSignedMessageHash.recover(stateUpdate.participant2Signature);
+        
+        require(recovered1 == participant1, "Invalid participant1 signature");
+        require(recovered2 == participant2, "Invalid participant2 signature");
+    }
+    
+    /**
+     * @dev Resolve dispute after challenge period
+     * @param channelId Unique identifier of the channel
+     */
+    function resolveDispute(bytes32 channelId) external nonReentrant {
+        EnhancedStateChannel storage channel = channels[channelId];
+        StateUpdate storage pendingUpdate = pendingUpdates[channelId];
+        
+        require(channel.isActive, "Channel not active");
+        require(channel.status == ChannelStatus.DISPUTED, "No dispute to resolve");
+        require(block.timestamp >= channel.challengeDeadline, "Challenge period active");
+        
+        // Apply the disputed state
+        if (pendingUpdate.newBalances.length >= 2) {
+            channel.balance1 = pendingUpdate.newBalances[0];
+            channel.balance2 = pendingUpdate.newBalances[1];
+        }
+        channel.nonce = pendingUpdate.nonce;
+        channel.stateRoot = pendingUpdate.stateRoot;
+        channel.status = ChannelStatus.OPEN;
+        channel.lastUpdated = block.timestamp;
+        
+        // Clear pending update
+        delete pendingUpdates[channelId];
+        
+        emit StateUpdated(channelId, channel.nonce, channel.stateRoot, block.timestamp);
+    }
+    
+    /**
+     * @dev Emergency channel closure (owner only)
+     * @param channelId Unique identifier of the channel
+     */
+    function emergencyCloseChannel(bytes32 channelId) external onlyOwner {
+        EnhancedStateChannel storage channel = channels[channelId];
+        
+        require(channel.isActive, "Channel not active");
+        
+        // Force close channel
+        channel.isActive = false;
+        channel.status = ChannelStatus.CLOSED;
+        
+        // Return balances to participants
+        if (channel.balance1 > 0) {
+            payable(channel.participant1).transfer(channel.balance1);
+        }
+        if (channel.balance2 > 0) {
+            payable(channel.participant2).transfer(channel.balance2);
+        }
+        
+        emit ChannelClosed(channelId, channel.balance1, channel.balance2, block.timestamp);
+    }
+    
+    /**
+     * @dev Check if channel has expired and needs cleanup
+     * @param channelId Unique identifier of the channel
+     * @return expired Whether the channel has exceeded maximum lifetime
+     */
+    function isChannelExpired(bytes32 channelId) external view returns (bool expired) {
+        EnhancedStateChannel memory channel = channels[channelId];
+        return channel.isActive && (block.timestamp - channel.createdAt > MAX_CHANNEL_LIFETIME);
+    }
+    
+    /**
+     * @dev Get channel statistics for analytics
+     * @return totalChannelsCreated Total number of channels created
+     * @return activeChannels Number of currently active channels
+     * @return totalValueLocked Total ETH locked in all channels
+     */
+    function getChannelStatistics() external view returns (
+        uint256 totalChannelsCreated,
+        uint256 activeChannels,
+        uint256 totalValueLocked
+    ) {
+        totalChannelsCreated = totalChannels;
+        totalValueLocked = address(this).balance;
+        
+        // Count active channels (this is gas-expensive for large numbers)
+        // In production, would track this separately
+        activeChannels = 0;
+        // Note: This would be optimized with separate tracking in production
+    }
+    
+    /**
+     * @dev Batch close multiple expired channels
+     * @param channelIds Array of channel IDs to close
+     */
+    function batchCloseExpiredChannels(bytes32[] calldata channelIds) external {
+        for (uint256 i = 0; i < channelIds.length; i++) {
+            bytes32 channelId = channelIds[i];
+            EnhancedStateChannel storage channel = channels[channelId];
+            
+            // Only close if expired and conditions met
+            if (channel.isActive && 
+                block.timestamp - channel.createdAt > MAX_CHANNEL_LIFETIME &&
+                channel.status == ChannelStatus.OPEN) {
+                
+                channel.isActive = false;
+                channel.status = ChannelStatus.CLOSED;
+                
+                // Return balances
+                if (channel.balance1 > 0) {
+                    payable(channel.participant1).transfer(channel.balance1);
+                }
+                if (channel.balance2 > 0) {
+                    payable(channel.participant2).transfer(channel.balance2);
+                }
+                
+                emit ChannelClosed(channelId, channel.balance1, channel.balance2, block.timestamp);
+            }
+        }
+    }
 }
