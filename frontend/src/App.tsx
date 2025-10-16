@@ -99,12 +99,12 @@ const App: React.FC = () => {
       <WagmiConfig config={wagmiConfig}>
         <RainbowKitProvider 
           chains={chains}
-          theme={theme === 'dark' ? 'dark' : 'light'}
+          theme="dark"
         >
           <Web3Provider>
             <Router>
-              <div className={`min-h-screen ${theme === 'dark' ? 'dark' : ''}`}>
-                <div className="bg-gray-50 dark:bg-gray-900 transition-colors duration-200">
+              <div className="min-h-screen bg-gradient-to-br from-gray-900 via-slate-900 to-black">
+                <div className="min-h-screen bg-gradient-to-tr from-blue-900/10 via-purple-900/5 to-cyan-900/10">
                   {/* Header */}
                   <Header 
                     onMenuClick={() => setSidebarOpen(!sidebarOpen)}
@@ -122,8 +122,8 @@ const App: React.FC = () => {
                     {/* Main Content */}
                     <main className={`flex-1 transition-all duration-300 ${
                       sidebarOpen ? 'ml-64' : 'ml-0'
-                    } lg:ml-64`}>
-                      <div className="px-4 py-6 sm:px-6 lg:px-8">
+                    } lg:ml-64 min-h-screen`}>
+                      <div className="px-6 py-8 sm:px-8 lg:px-12">
                         <Routes>
                           <Route path="/" element={<Navigate to="/dashboard" replace />} />
                           <Route path="/dashboard" element={<Dashboard />} />
