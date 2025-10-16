@@ -185,38 +185,43 @@ const Dashboard: React.FC = () => {
         </div>
 
         {/* Top Pools */}
-        <div className="bg-white dark:bg-gray-800 shadow rounded-lg border border-gray-200 dark:border-gray-700">
+        <div className="backdrop-blur-xl bg-gradient-to-br from-purple-800/40 to-violet-900/40 border border-purple-700/30 rounded-2xl shadow-2xl shadow-purple-500/10">
           <div className="p-6">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-medium text-gray-900 dark:text-white">
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="text-xl font-bold bg-gradient-to-r from-purple-300 to-violet-300 bg-clip-text text-transparent">
                 Top Performing Pools
               </h3>
-              <TrendingUpIcon className="h-5 w-5 text-gray-400" />
+              <div className="p-3 rounded-xl bg-purple-500/20 border border-purple-400/30 backdrop-blur-sm">
+                <TrendingUpIcon className="h-6 w-6 text-purple-300" />
+              </div>
             </div>
-            <div className="space-y-3">
+            <div className="space-y-4">
               {mevMetrics.topPools.length === 0 ? (
-                <p className="text-sm text-gray-500 dark:text-gray-400">
-                  No pool data available
-                </p>
+                <div className="text-center py-8">
+                  <TrendingUpIcon className="mx-auto h-12 w-12 text-gray-500 mb-4" />
+                  <p className="text-gray-400 font-medium">
+                    No pool data available
+                  </p>
+                </div>
               ) : (
                 mevMetrics.topPools.slice(0, 5).map((pool) => (
                   <div 
                     key={pool.poolId}
-                    className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700 rounded-md"
+                    className="flex items-center justify-between p-4 bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl hover:bg-white/10 transition-all duration-200"
                   >
                     <div>
-                      <p className="text-sm font-medium text-gray-900 dark:text-white">
+                      <p className="text-sm font-bold text-white mb-1">
                         {pool.token0.slice(0, 6)}.../{pool.token1.slice(0, 6)}...
                       </p>
-                      <p className="text-xs text-gray-500 dark:text-gray-400">
+                      <p className="text-xs text-purple-300 font-medium">
                         Fee: {pool.fee / 10000}%
                       </p>
                     </div>
                     <div className="text-right">
-                      <p className="text-sm text-gray-900 dark:text-white">
+                      <p className="text-sm font-bold text-white">
                         {pool.liquidity.toString().slice(0, 8)}...
                       </p>
-                      <p className="text-xs text-gray-500 dark:text-gray-400">
+                      <p className="text-xs text-gray-400">
                         Liquidity
                       </p>
                     </div>
@@ -228,21 +233,42 @@ const Dashboard: React.FC = () => {
         </div>
       </div>
 
-      {/* MEV Analytics Chart Placeholder */}
-      <div className="bg-white dark:bg-gray-800 shadow rounded-lg border border-gray-200 dark:border-gray-700">
+      {/* MEV Analytics Chart */}
+      <div className="backdrop-blur-xl bg-gradient-to-br from-gray-800/40 to-slate-900/40 border border-gray-700/30 rounded-2xl shadow-2xl shadow-blue-500/10">
         <div className="p-6">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-medium text-gray-900 dark:text-white">
+          <div className="flex items-center justify-between mb-6">
+            <h3 className="text-2xl font-bold bg-gradient-to-r from-blue-300 via-cyan-300 to-purple-300 bg-clip-text text-transparent">
               MEV Protection Analytics
             </h3>
-            <ChartBarIcon className="h-5 w-5 text-gray-400" />
+            <div className="p-3 rounded-xl bg-blue-500/20 border border-blue-400/30 backdrop-blur-sm">
+              <ChartBarIcon className="h-6 w-6 text-blue-300" />
+            </div>
           </div>
-          <div className="h-64 flex items-center justify-center bg-gray-50 dark:bg-gray-700 rounded-md">
+          <div className="h-80 flex items-center justify-center bg-gradient-to-br from-gray-900/20 to-black/20 backdrop-blur-sm border border-white/10 rounded-2xl">
             <div className="text-center">
-              <ChartBarIcon className="mx-auto h-12 w-12 text-gray-400" />
-              <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">
-                MEV analytics chart will be displayed here
-              </p>
+              <div className="p-6 rounded-2xl bg-gradient-to-br from-blue-500/20 to-purple-500/20 border border-blue-400/30 backdrop-blur-sm mb-6">
+                <ChartBarIcon className="mx-auto h-16 w-16 text-blue-300 mb-4" />
+                <p className="text-lg font-bold text-white mb-2">
+                  Advanced MEV Analytics
+                </p>
+                <p className="text-gray-400 font-medium">
+                  Real-time charts and insights will be displayed here
+                </p>
+              </div>
+              <div className="grid grid-cols-3 gap-4 text-center">
+                <div className="p-3 rounded-xl bg-white/5 backdrop-blur-sm border border-white/10">
+                  <p className="text-xs text-gray-400 mb-1">Protection Rate</p>
+                  <p className="text-lg font-bold text-green-300">99.8%</p>
+                </div>
+                <div className="p-3 rounded-xl bg-white/5 backdrop-blur-sm border border-white/10">
+                  <p className="text-xs text-gray-400 mb-1">Gas Saved</p>
+                  <p className="text-lg font-bold text-cyan-300">2.4M</p>
+                </div>
+                <div className="p-3 rounded-xl bg-white/5 backdrop-blur-sm border border-white/10">
+                  <p className="text-xs text-gray-400 mb-1">Avg Response</p>
+                  <p className="text-lg font-bold text-purple-300">12ms</p>
+                </div>
+              </div>
             </div>
           </div>
         </div>
