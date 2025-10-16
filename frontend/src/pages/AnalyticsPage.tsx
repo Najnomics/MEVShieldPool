@@ -118,3 +118,53 @@ const AnalyticsPage: React.FC = () => {
           </div>
         ))}
       </div>
+
+      {/* Charts Section */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        {/* MEV Trends Chart */}
+        <div className="backdrop-blur-xl bg-gradient-to-br from-blue-800/40 to-cyan-900/40 border border-blue-700/30 rounded-2xl shadow-2xl shadow-blue-500/10">
+          <div className="p-6">
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="text-xl font-bold bg-gradient-to-r from-blue-300 to-cyan-300 bg-clip-text text-transparent">
+                MEV Protection Trends
+              </h3>
+              <div className="p-3 rounded-xl bg-blue-500/20 border border-blue-400/30 backdrop-blur-sm">
+                <TrendingUpIcon className="h-6 w-6 text-blue-300" />
+              </div>
+            </div>
+            <div className="h-64 flex items-center justify-center bg-gradient-to-br from-gray-900/20 to-black/20 backdrop-blur-sm border border-white/10 rounded-xl">
+              <div className="text-center">
+                <TrendingUpIcon className="mx-auto h-12 w-12 text-blue-400 mb-4" />
+                <p className="text-blue-200 font-bold">MEV Trends Chart</p>
+                <p className="text-gray-400 text-sm mt-2">Interactive chart visualization</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Gas Efficiency Chart */}
+        <div className="backdrop-blur-xl bg-gradient-to-br from-purple-800/40 to-violet-900/40 border border-purple-700/30 rounded-2xl shadow-2xl shadow-purple-500/10">
+          <div className="p-6">
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="text-xl font-bold bg-gradient-to-r from-purple-300 to-violet-300 bg-clip-text text-transparent">
+                Gas Efficiency Analysis
+              </h3>
+              <div className="p-3 rounded-xl bg-purple-500/20 border border-purple-400/30 backdrop-blur-sm">
+                <ChartBarIcon className="h-6 w-6 text-purple-300" />
+              </div>
+            </div>
+            <div className="h-64 flex items-center justify-center bg-gradient-to-br from-gray-900/20 to-black/20 backdrop-blur-sm border border-white/10 rounded-xl">
+              <div className="text-center">
+                <ChartBarIcon className="mx-auto h-12 w-12 text-purple-400 mb-4" />
+                <p className="text-purple-200 font-bold">Gas Usage Chart</p>
+                <p className="text-gray-400 text-sm mt-2">Real-time gas optimization metrics</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default AnalyticsPage;
