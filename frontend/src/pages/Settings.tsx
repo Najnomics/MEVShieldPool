@@ -115,6 +115,87 @@ const Settings: React.FC = () => {
               <div className="p-3 rounded-xl bg-purple-500/20 border border-purple-400/30 backdrop-blur-sm">
                 <ShieldCheckIcon className="h-6 w-6 text-purple-300" />
               </div>
+            <div className="space-y-4">
+              {Object.entries(privacy).map(([key, value]) => (
+                <div key={key} className="flex items-center justify-between p-4 bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl">
+                  <div>
+                    <h4 className="text-white font-medium">
+                      {key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())}
+                    </h4>
+                    <p className="text-gray-400 text-sm">
+                      {key === 'encryptBids' && 'Use Lit Protocol to encrypt all bid submissions'}
+                      {key === 'hideBidAmounts' && 'Hide your bid amounts from the interface'}
+                      {key === 'anonymousMode' && 'Enable anonymous participation in auctions'}
+                    </p>
+                  </div>
+                  <label className="relative inline-flex items-center cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={value}
+                      onChange={(e) => setPrivacy(prev => ({
+                        ...prev,
+                        [key]: e.target.checked
+                      }))}
+                      className="sr-only peer"
+                    />
+                    <div className="w-11 h-6 bg-gray-700 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-purple-300/25 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-purple-600"></div>
+                  </label>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Advanced Preferences */}
+      <div className="backdrop-blur-xl bg-gradient-to-br from-orange-800/40 to-amber-900/40 border border-orange-700/30 rounded-2xl shadow-2xl shadow-orange-500/10">
+        <div className="p-6">
+          <div className="flex items-center justify-between mb-6">
+            <h3 className="text-xl font-bold bg-gradient-to-r from-orange-300 to-amber-300 bg-clip-text text-transparent">
+              Advanced Preferences
+            </h3>
+            <div className="p-3 rounded-xl bg-orange-500/20 border border-orange-400/30 backdrop-blur-sm">
+              <Cog6ToothIcon className="h-6 w-6 text-orange-300" />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="space-y-4">
+              <label className="block text-sm font-bold text-orange-200">
+                Refresh Interval (seconds)
+              </label>
+              <select
+                value={preferences.refreshInterval}
+                onChange={(e) => setPreferences(prev => ({
+                  ...prev,
+                  refreshInterval: parseInt(e.target.value)
+                }))}
+                className="w-full px-4 py-3 bg-white/10 backdrop-blur-sm border border-white/20 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-orange-400/50 focus:border-orange-400/50 transition-all duration-200"
+              >
+                <option value={15} className="bg-gray-800">15 seconds</option>
+                <option value={30} className="bg-gray-800">30 seconds</option>
+                <option value={60} className="bg-gray-800">1 minute</option>
+                <option value={300} className="bg-gray-800">5 minutes</option>
+              </select>
+            </div>
+
+            <div className="space-y-4">
+              <label className="block text-sm font-bold text-orange-200">
+                Slippage Tolerance
+              </label>
+              <select
+                value={preferences.slippageTolerance}
+                onChange={(e) => setPreferences(prev => ({
+                  ...prev,
+                  slippageTolerance: parseFloat(e.target.value)
+                }))}
+                className="w-full px-4 py-3 bg-white/10 backdrop-blur-sm border border-white/20 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-orange-400/50 focus:border-orange-400/50 transition-all duration-200"
+              >
+                <option value={0.1} className="bg-gray-800">0.1%</option>
+                <option value={0.5} className="bg-gray-800">0.5%</option>
+                <option value={1.0} className="bg-gray-800">1.0%</option>
+                <option value={2.0} className="bg-gray-800">2.0%</option>
+              </select>
             </div>
           </div>
         </div>
