@@ -10,14 +10,14 @@ interface HeaderProps {
 
 const Header: React.FC<HeaderProps> = ({ onMenuClick, onThemeToggle, theme }) => {
   return (
-    <header className="bg-white dark:bg-gray-800 shadow-sm border-b border-gray-200 dark:border-gray-700">
+    <header className="backdrop-blur-md bg-gray-900/30 border-b border-gray-700/50 shadow-xl">
       <div className="px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
           {/* Left side - Menu button and logo */}
           <div className="flex items-center">
             <button
               type="button"
-              className="lg:hidden p-2 rounded-md text-gray-400 hover:text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500"
+              className="lg:hidden p-2 rounded-xl bg-white/10 backdrop-blur-sm border border-white/20 text-white hover:bg-white/20 focus:outline-none focus:ring-2 focus:ring-blue-400/50 transition-all duration-200"
               onClick={onMenuClick}
             >
               <Bars3Icon className="h-6 w-6" />
@@ -25,10 +25,10 @@ const Header: React.FC<HeaderProps> = ({ onMenuClick, onThemeToggle, theme }) =>
             
             <div className="flex items-center ml-4 lg:ml-0">
               <div className="flex-shrink-0 flex items-center">
-                <div className="h-8 w-8 bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
-                  <span className="text-white font-bold text-sm">M</span>
+                <div className="h-10 w-10 bg-gradient-to-br from-cyan-400 via-blue-500 to-purple-600 rounded-xl flex items-center justify-center shadow-lg shadow-blue-500/25">
+                  <span className="text-white font-bold text-lg">M</span>
                 </div>
-                <h1 className="ml-3 text-xl font-semibold text-gray-900 dark:text-white">
+                <h1 className="ml-3 text-xl font-bold bg-gradient-to-r from-white to-gray-300 bg-clip-text text-transparent">
                   MEVShield Pool
                 </h1>
               </div>
@@ -37,9 +37,9 @@ const Header: React.FC<HeaderProps> = ({ onMenuClick, onThemeToggle, theme }) =>
 
           {/* Center - Network status indicator */}
           <div className="hidden md:flex items-center space-x-4">
-            <div className="flex items-center space-x-2">
-              <div className="h-2 w-2 bg-green-400 rounded-full animate-pulse"></div>
-              <span className="text-sm text-gray-600 dark:text-gray-300">
+            <div className="flex items-center space-x-2 px-4 py-2 rounded-full bg-green-500/20 border border-green-400/30 backdrop-blur-sm">
+              <div className="h-2 w-2 bg-green-400 rounded-full animate-pulse shadow-lg shadow-green-400/50"></div>
+              <span className="text-sm text-green-200 font-medium">
                 Network Active
               </span>
             </div>
@@ -50,7 +50,7 @@ const Header: React.FC<HeaderProps> = ({ onMenuClick, onThemeToggle, theme }) =>
             {/* Theme toggle */}
             <button
               type="button"
-              className="p-2 rounded-md text-gray-400 hover:text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500"
+              className="p-2 rounded-xl bg-white/10 backdrop-blur-sm border border-white/20 text-white hover:bg-white/20 focus:outline-none focus:ring-2 focus:ring-blue-400/50 transition-all duration-200"
               onClick={onThemeToggle}
             >
               {theme === 'dark' ? (
@@ -61,20 +61,22 @@ const Header: React.FC<HeaderProps> = ({ onMenuClick, onThemeToggle, theme }) =>
             </button>
 
             {/* Wallet connection */}
-            <ConnectButton 
-              accountStatus={{
-                smallScreen: 'avatar',
-                largeScreen: 'full',
-              }}
-              chainStatus={{
-                smallScreen: 'icon',
-                largeScreen: 'full',
-              }}
-              showBalance={{
-                smallScreen: false,
-                largeScreen: true,
-              }}
-            />
+            <div className="rounded-xl overflow-hidden">
+              <ConnectButton 
+                accountStatus={{
+                  smallScreen: 'avatar',
+                  largeScreen: 'full',
+                }}
+                chainStatus={{
+                  smallScreen: 'icon',
+                  largeScreen: 'full',
+                }}
+                showBalance={{
+                  smallScreen: false,
+                  largeScreen: true,
+                }}
+              />
+            </div>
           </div>
         </div>
       </div>

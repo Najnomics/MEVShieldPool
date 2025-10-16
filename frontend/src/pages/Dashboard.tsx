@@ -50,44 +50,52 @@ const Dashboard: React.FC = () => {
       value: formatEther(mevMetrics.totalMEVPrevented),
       unit: 'ETH',
       icon: ShieldCheckIcon,
-      color: 'text-green-600',
-      bgColor: 'bg-green-100 dark:bg-green-900',
+      color: 'text-emerald-300',
+      bgColor: 'from-emerald-500/20 to-green-500/20',
+      shadowColor: 'shadow-emerald-500/20',
+      borderColor: 'border-emerald-400/30',
     },
     {
       name: 'Active Auctions',
       value: activeAuctions.length.toString(),
       unit: 'auctions',
       icon: CurrencyDollarIcon,
-      color: 'text-blue-600',
-      bgColor: 'bg-blue-100 dark:bg-blue-900',
+      color: 'text-cyan-300',
+      bgColor: 'from-cyan-500/20 to-blue-500/20',
+      shadowColor: 'shadow-cyan-500/20',
+      borderColor: 'border-cyan-400/30',
     },
     {
       name: 'Active Pools',
       value: activePools.length.toString(),
       unit: 'pools',
       icon: BeakerIcon,
-      color: 'text-purple-600',
-      bgColor: 'bg-purple-100 dark:bg-purple-900',
+      color: 'text-purple-300',
+      bgColor: 'from-purple-500/20 to-violet-500/20',
+      shadowColor: 'shadow-purple-500/20',
+      borderColor: 'border-purple-400/30',
     },
     {
       name: 'Avg Auction Time',
       value: Math.round(mevMetrics.averageAuctionTime / 60).toString(),
       unit: 'min',
       icon: ClockIcon,
-      color: 'text-orange-600',
-      bgColor: 'bg-orange-100 dark:bg-orange-900',
+      color: 'text-orange-300',
+      bgColor: 'from-orange-500/20 to-amber-500/20',
+      shadowColor: 'shadow-orange-500/20',
+      borderColor: 'border-orange-400/30',
     },
   ];
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       {/* Header */}
-      <div>
-        <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+      <div className="backdrop-blur-sm bg-gradient-to-r from-gray-800/30 to-gray-900/30 border border-gray-700/30 rounded-2xl p-6 shadow-xl">
+        <h1 className="text-3xl font-bold bg-gradient-to-r from-white via-cyan-200 to-blue-300 bg-clip-text text-transparent">
           MEV Dashboard
         </h1>
-        <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-          Real-time MEV protection and auction analytics
+        <p className="mt-2 text-gray-300 font-medium">
+          Real-time MEV protection and auction analytics with advanced glassmorphism design
         </p>
       </div>
 
