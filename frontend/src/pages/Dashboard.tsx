@@ -104,25 +104,25 @@ const Dashboard: React.FC = () => {
         {statsCards.map((stat) => (
           <div
             key={stat.name}
-            className="bg-white dark:bg-gray-800 overflow-hidden shadow rounded-lg border border-gray-200 dark:border-gray-700"
+            className={`backdrop-blur-xl bg-gradient-to-br ${stat.bgColor} border ${stat.borderColor} rounded-2xl overflow-hidden shadow-2xl ${stat.shadowColor} hover:shadow-3xl hover:scale-105 transition-all duration-300`}
           >
-            <div className="p-5">
+            <div className="p-6">
               <div className="flex items-center">
                 <div className="flex-shrink-0">
-                  <div className={`p-3 rounded-md ${stat.bgColor}`}>
-                    <stat.icon className={`h-6 w-6 ${stat.color}`} />
+                  <div className={`p-4 rounded-2xl bg-white/10 backdrop-blur-sm border border-white/20 shadow-lg`}>
+                    <stat.icon className={`h-8 w-8 ${stat.color}`} />
                   </div>
                 </div>
                 <div className="ml-5 w-0 flex-1">
                   <dl>
-                    <dt className="text-sm font-medium text-gray-500 dark:text-gray-400 truncate">
+                    <dt className="text-sm font-medium text-gray-300 truncate mb-1">
                       {stat.name}
                     </dt>
                     <dd className="flex items-baseline">
-                      <div className="text-2xl font-semibold text-gray-900 dark:text-white">
+                      <div className="text-3xl font-bold text-white">
                         {stat.value}
                       </div>
-                      <div className="ml-2 text-sm text-gray-500 dark:text-gray-400">
+                      <div className={`ml-2 text-sm font-medium ${stat.color}`}>
                         {stat.unit}
                       </div>
                     </dd>
@@ -135,40 +135,45 @@ const Dashboard: React.FC = () => {
       </div>
 
       {/* Recent Activity */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         {/* Active Auctions */}
-        <div className="bg-white dark:bg-gray-800 shadow rounded-lg border border-gray-200 dark:border-gray-700">
+        <div className="backdrop-blur-xl bg-gradient-to-br from-gray-800/40 to-gray-900/40 border border-gray-700/30 rounded-2xl shadow-2xl shadow-cyan-500/10">
           <div className="p-6">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-medium text-gray-900 dark:text-white">
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="text-xl font-bold bg-gradient-to-r from-cyan-300 to-blue-300 bg-clip-text text-transparent">
                 Active Auctions
               </h3>
-              <CurrencyDollarIcon className="h-5 w-5 text-gray-400" />
+              <div className="p-3 rounded-xl bg-cyan-500/20 border border-cyan-400/30 backdrop-blur-sm">
+                <CurrencyDollarIcon className="h-6 w-6 text-cyan-300" />
+              </div>
             </div>
-            <div className="space-y-3">
+            <div className="space-y-4">
               {activeAuctions.length === 0 ? (
-                <p className="text-sm text-gray-500 dark:text-gray-400">
-                  No active auctions
-                </p>
+                <div className="text-center py-8">
+                  <CurrencyDollarIcon className="mx-auto h-12 w-12 text-gray-500 mb-4" />
+                  <p className="text-gray-400 font-medium">
+                    No active auctions
+                  </p>
+                </div>
               ) : (
                 activeAuctions.slice(0, 5).map((auction) => (
                   <div 
                     key={auction.auctionId}
-                    className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700 rounded-md"
+                    className="flex items-center justify-between p-4 bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl hover:bg-white/10 transition-all duration-200"
                   >
                     <div>
-                      <p className="text-sm font-medium text-gray-900 dark:text-white">
+                      <p className="text-sm font-bold text-white mb-1">
                         Pool: {auction.poolId.slice(0, 8)}...
                       </p>
-                      <p className="text-xs text-gray-500 dark:text-gray-400">
+                      <p className="text-xs text-cyan-300 font-medium">
                         Highest Bid: {formatEther(auction.highestBid)} ETH
                       </p>
                     </div>
                     <div className="text-right">
-                      <p className="text-sm text-gray-900 dark:text-white">
+                      <p className="text-sm font-bold text-white">
                         {new Date(auction.deadline * 1000).toLocaleTimeString()}
                       </p>
-                      <p className="text-xs text-gray-500 dark:text-gray-400">
+                      <p className="text-xs text-gray-400">
                         Deadline
                       </p>
                     </div>
