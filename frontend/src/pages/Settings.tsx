@@ -115,6 +115,8 @@ const Settings: React.FC = () => {
               <div className="p-3 rounded-xl bg-purple-500/20 border border-purple-400/30 backdrop-blur-sm">
                 <ShieldCheckIcon className="h-6 w-6 text-purple-300" />
               </div>
+            </div>
+
             <div className="space-y-4">
               {Object.entries(privacy).map(([key, value]) => (
                 <div key={key} className="flex items-center justify-between p-4 bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl">
