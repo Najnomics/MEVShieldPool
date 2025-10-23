@@ -258,3 +258,105 @@ class MEVShieldVincentApp {
             });
         });
     }
+
+    setupWebSocketHandlers() {
+        this.io.on('connection', (socket) => {
+            console.log(`🔌 New client connected: ${socket.id}`);
+            
+            socket.on('subscribe_mev_alerts', (data) => {
+                const { userId, poolIds } = data;
+                socket.join(`mev_alerts_${userId}`);
+                
+                if (poolIds && Array.isArray(poolIds)) {
+                    poolIds.forEach(poolId => {
+                        socket.join(`pool_${poolId}`);
+                    });
+                }
+                
+                console.log(`📡 Client ${socket.id} subscribed to MEV alerts for user ${userId}`);
+            });
+            
+            socket.on('subscribe_automation_updates', (data) => {
+                const { userId, sessionId } = data;
+                socket.join(`automation_${userId}`);
+                
+                if (sessionId) {
+                    socket.join(`session_${sessionId}`);
+                }
+                
+                console.log(`🤖 Client ${socket.id} subscribed to automation updates`);
+            });
+            
+            socket.on('unsubscribe_all', () => {
+                socket.leaveAll();
+                console.log(`📴 Client ${socket.id} unsubscribed from all channels`);
+            });
+            
+            socket.on('disconnect', (reason) => {
+                console.log(`🔌 Client disconnected: ${socket.id} - ${reason}`);
+            });
+        });
+    }
+
+    async start() {
+        try {
+            await this.initialize();
+            
+            this.server.listen(this.port, () => {
+                console.log(`🎯 MEVShield Vincent App running on port ${this.port}`);
+                console.log(`📊 Dashboard: http://localhost:${this.port}`);
+                console.log(`🔧 Health Check: http://localhost:${this.port}/health`);
+                console.log(`📋 Vincent Metadata: http://localhost:${this.port}/vincent/metadata`);
+            });
+            
+            // Graceful shutdown handling
+            process.on('SIGINT', () => this.shutdown('SIGINT'));
+            process.on('SIGTERM', () => this.shutdown('SIGTERM'));
+            
+        } catch (error) {
+            console.error('❌ Failed to start Vincent App:', error);
+            process.exit(1);
+        }
+    }
+
+    async shutdown(signal) {
+        console.log(`\n🛑 Received ${signal}, starting graceful shutdown...`);
+        
+        try {
+            // Stop automation engine
+            if (this.automationEngine) {
+                await this.automationEngine.stop();
+            }
+            
+            // Close WebSocket connections
+            this.io.close();
+            
+            // Close HTTP server
+            this.server.close(() => {
+                console.log('🔌 HTTP server closed');
+            });
+            
+            // Close database connection
+            if (this.mongoClient) {
+                await this.mongoClient.close();
+                console.log('📦 Database connection closed');
+            }
+            
+            console.log('✅ Graceful shutdown completed');
+            process.exit(0);
+            
+        } catch (error) {
+            console.error('❌ Error during shutdown:', error);
+            process.exit(1);
+        }
+    }
+}
+
+// Create and start the Vincent app
+const vincentApp = new MEVShieldVincentApp();
+vincentApp.start().catch(error => {
+    console.error('❌ Fatal error starting Vincent App:', error);
+    process.exit(1);
+});
+
+export default MEVShieldVincentApp;
