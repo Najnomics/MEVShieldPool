@@ -480,7 +480,7 @@ contract BlockscoutManager is Ownable, ReentrancyGuard {
     /// @dev Convert bytes32 to hex string
     /// @param _bytes32 Bytes32 to convert
     /// @return hex Hex string representation
-    function _bytes32ToHex(bytes32 _bytes32) internal pure returns (string memory hex) {
+    function _bytes32ToHex(bytes32 _bytes32) internal pure returns (string memory) {
         bytes memory alphabet = "0123456789abcdef";
         bytes memory str = new bytes(64);
         for (uint256 i = 0; i < 32; i++) {
