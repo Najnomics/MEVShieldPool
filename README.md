@@ -2,7 +2,7 @@
 
 **AI-Powered Privacy and Cross-Chain Execution for Uniswap V4**
 
-> A Uniswap V4-based dApp that auctions first-in-block trading rights to redistribute MEV proceeds to liquidity providers, featuring encrypted bids and AI-powered MEV risk analysis.
+> Uniswap V4 Hook–powered MEV auction that sells first-in-block trading rights and redistributes proceeds to LPs. The protocol integrates Pyth price feeds, Lit Protocol MPC (encrypted bids), and Yellow Network state channels for cross-chain settlement.
 
 [![ETHOnline 2025](https://img.shields.io/badge/ETHOnline-2025-blue)](https://ethglobal.com/events/ethonline2025)
 [![Uniswap V4](https://img.shields.io/badge/Uniswap-V4-ff007a)](https://uniswap.org)
@@ -12,16 +12,16 @@
 
 ## 🌟 Overview
 
-MEVShield Pool extends the LVR Auction Hook concept into a full-fledged DEX pool with privacy-first architecture and cross-chain capabilities. By auctioning first-in-block trading rights, the protocol redistributes MEV value back to liquidity providers while protecting traders with encrypted bid submission.
+MEVShield Pool extends the LVR auction concept into a production-grade, Uniswap V4 Hook–based system. The protocol runs continuous block-by-block auctions for searchers to obtain priority execution. Bids can be submitted transparently or as encrypted payloads via Lit Protocol MPC; settlement can occur locally or be coordinated cross-chain via Yellow Network state channels.
 
 ### Key Features
 
-- 🔒 **Privacy-First Trading** - Encrypted bids using Lit Protocol's MPC/FHE
-- 🤖 **AI-Powered MEV Analysis** - Real-time risk assessment via ASI Alliance agents
-- ⚡ **High-Throughput Execution** - 10,000+ TPS on Arcology DevNet
-- 🌉 **Cross-Chain Settlement** - State channels via Yellow Network (ERC-7824)
-- 📊 **Real-Time Price Feeds** - 2000+ Pyth Network oracles
-- 🔍 **Custom Block Explorer** - Autoscout integration with MCP insights
+- 🔒 **Encrypted Bids (MPC)**: Bid privacy via Lit Protocol MPC (FHE deferred for now)
+- 📊 **Real-Time Pricing**: Pyth Network v2 EVM SDK integration
+- 🧩 **Uniswap V4 Hooks**: Auction lifecycle in `beforeSwap/afterSwap` with standardized events
+- 🌉 **Cross-Chain Settlement**: Yellow Network state channels (ERC‑7824 pattern)
+- 🧠 **AI Agents (Planned)**: ASI Alliance (uAgents, MeTTa, ASI:One) for risk analysis
+- 🔎 **Explorer (Planned)**: Blockscout Autoscout + MCP analytics
 
 ---
 
@@ -38,41 +38,23 @@ MEVShield Pool solves these challenges through auction-based priority rights and
 
 ---
 
-## 🏗️ Architecture
+## 🏗️ System Architecture
 
-```
-┌─────────────────────────────────────────────────────────────┐
-│                     MEVShield Pool                          │
-├─────────────────────────────────────────────────────────────┤
-│                                                             │
-│  ┌──────────────┐    ┌──────────────┐    ┌──────────────┐ │
-│  │   Uniswap    │───▶│     MEV      │───▶│  Encrypted   │ │
-│  │   V4 Hook    │    │   Auction    │    │  Bid Layer   │ │
-│  │              │    │    Logic     │    │ (Lit Proto.) │ │
-│  └──────────────┘    └──────────────┘    └──────────────┘ │
-│         │                    │                    │        │
-│         ▼                    ▼                    ▼        │
-│  ┌──────────────────────────────────────────────────────┐ │
-│  │           AI Risk Analysis (ASI Alliance)            │ │
-│  │     (uAgents + MeTTa Reasoning + ASI:One)            │ │
-│  └──────────────────────────────────────────────────────┘ │
-│         │                    │                    │        │
-│         ▼                    ▼                    ▼        │
-│  ┌──────────────┐    ┌──────────────┐    ┌──────────────┐ │
-│  │     Pyth     │    │    Yellow    │    │  Arcology    │ │
-│  │ Price Feeds  │    │   Network    │    │   DevNet     │ │
-│  │              │    │(State Chan.) │    │ (10k+ TPS)   │ │
-│  └──────────────┘    └──────────────┘    └──────────────┘ │
-│                                                             │
-└─────────────────────────────────────────────────────────────┘
-              │                              │
-              ▼                              ▼
-     ┌─────────────────┐          ┌──────────────────┐
-     │   Blockscout    │          │   Lighthouse     │
-     │    Explorer     │          │     Storage      │
-     │  (Autoscout)    │          │                  │
-     └─────────────────┘          └──────────────────┘
-```
+Core on-chain modules live under `src/`:
+
+- `hooks/MEVAuctionHook.sol`: Uniswap V4 `BaseHook` implementing the MEV auction lifecycle. Emits standardized events: `HookSwap`, `HookModifyLiquidity`, `MEVDetected`.
+- `hooks/PythPriceHook.sol`: Pyth pull-oracle utilities for on-chain price-based MEV analysis (aligned with Pyth SDK v2; uses `getPrice` and validation).
+- `hooks/LitEncryptionHook.sol` and `encryption/LitMPCManager.sol`: MPC-only encrypted bid flows (FHE deferred). Access control and session management via `LitProtocolLib`.
+- `settlement/YellowNetworkChannel.sol` and `hooks/YellowStateChannel.sol`: ERC‑7824-style state channels for cross-chain settlement and off-chain allowance during a session.
+- `oracles/PythPriceOracle.sol`: Gas-optimized price feed utilities and analytics with caching and batch updates.
+- `analytics/BlockscoutManager.sol` (optional): Autoscout/MCP integration (compiled with via-IR to avoid stack-depth issues).
+
+High-level flow (per auction round):
+1) Searchers submit bids (transparent or encrypted via Lit MPC).
+2) `MEVAuctionHook.beforeSwap` validates auction rights for the highest bidder in the current round.
+3) `MEVAuctionHook.afterSwap` accounts detected MEV and emits standardized events for off-chain indexing.
+4) On expiry, the round is finalized; protocol fees and LP shares are accounted; encrypted bids may be processed (threshold decryption path stubbed for now).
+5) Optionally, cross-chain settlement updates balances in Yellow state channels.
 
 ---
 
@@ -82,7 +64,7 @@ MEVShield Pool solves these challenges through auction-based priority rights and
 |-----------|-----------|---------|
 | **Smart Contracts** | Solidity, Foundry | Core protocol logic |
 | **Hook Framework** | Uniswap V4 Hooks | MEV auction integration |
-| **Privacy Layer** | Lit Protocol (MPC/TSS) | Encrypted bid submission |
+| **Privacy Layer** | Lit Protocol (MPC/TSS) | Encrypted bid submission (FHE deferred) |
 | **AI Agents** | ASI Alliance (uAgents, MeTTa, ASI:One) | MEV risk analysis |
 | **Price Oracles** | Pyth Network | Real-time price feeds |
 | **Cross-Chain** | Yellow Network (ERC-7824) | State channel settlements |
@@ -114,21 +96,18 @@ cd mevshield-pool
 # Install Foundry dependencies
 forge install
 
-# Install Node.js dependencies
-cd frontend && npm install
-cd ../lighthouse-storage && npm install
-cd ../ai-agents && pip install -r requirements.txt
+# Optional: Frontend / integrations
+# cd frontend && npm install
 
-# Set up environment variables
+# Environment
 cp .env.example .env
-cp frontend/.env.example frontend/.env.local
-# Edit with your API keys and private key
+# Edit with PRIVATE_KEY, ALCHEMY_API_KEY, etc.
 
-# Compile contracts
+# Compile
 forge build
 
-# Run tests
-forge test
+# Run tests (offline to avoid proxy-related crashes)
+FOUNDRY_OFFLINE=true FOUNDRY_DISABLE_SIGS=1 forge test -q
 ```
 
 ### Deployment
@@ -138,10 +117,7 @@ forge test
 export PRIVATE_KEY=0x...
 export ALCHEMY_API_KEY=your_key
 
-# Deploy to all testnets
-./deploy.sh
-
-# Or deploy individually
+# Example deploy
 forge script script/Deploy.s.sol --rpc-url $SEPOLIA_RPC_URL --broadcast
 ```
 
@@ -157,7 +133,7 @@ Visit `http://localhost:3000` to interact with the dApp.
 
 ---
 
-## 🎮 How It Works
+## 🎮 How It Works (End-to-End)
 
 ### 1. Auction Mechanism
 
@@ -195,7 +171,7 @@ function distributeMEV() internal {
 }
 ```
 
-### 3. AI Risk Analysis
+### 3. AI Risk Analysis (Planned)
 
 AI agents analyze transaction patterns in real-time:
 
@@ -215,7 +191,7 @@ async def analyze_risk(ctx: Context):
 
 ---
 
-## 📊 Performance Metrics
+## 📊 Performance Targets
 
 Based on simulations and previous implementations:
 
@@ -229,7 +205,15 @@ Based on simulations and previous implementations:
 
 ---
 
-## 🏆 Sponsor Integration
+## 🧩 Integrations Alignment
+
+- Uniswap V4 Hooks: `BaseHook` permissions implemented; standardized hook events emitted.
+- Pyth Network: v2 EVM SDK patterns (validated `getPrice`, basis points math, batch updates).
+- Lit Protocol: MPC-only path implemented (encrypted bids, session keys, access control). FHE: deferred.
+- Yellow Network: ERC‑7824-style state channels; signature verification via OpenZeppelin ECDSA.
+- Blockscout Autoscout/MCP: integration scaffolded (optional), compiled via IR to avoid stack-depth.
+
+See `docs/integrations-index.md` for canonical docs links to each provider.
 
 ### Blockscout ($10,000)
 - ✅ Custom Autoscout explorer deployment
@@ -286,28 +270,32 @@ Based on simulations and previous implementations:
 ## 🧪 Testing
 
 ```bash
-# Run all tests
-npm run test
+# Recommended
+FOUNDRY_OFFLINE=true FOUNDRY_DISABLE_SIGS=1 forge test -q
 
-# Run specific test suites
-npm run test:auction
-npm run test:privacy
-npm run test:ai-agents
-
-# Generate coverage report
-npm run coverage
+# Build & lint
+forge build
+forge fmt --check
 ```
+
+Key test files:
+- `test/unit/MEVAuctionHook.t.sol` – auction bidding, events, timing.
+- `test/unit/PythPriceFeed.t.sol` – pricing retrieval/validation using mock Pyth.
+- `test/unit/LitEncryption.t.sol` – MPC-only access control & session management.
+- `test/unit/YellowNetworkChannel.t.sol` – channel lifecycle and disputes.
+- `test/integration/MEVAuctionIntegration.t.sol` – end-to-end flow.
 
 ---
 
-## 🛣️ Roadmap
+## 🛣️ Roadmap & Current Status
 
 ### Phase 1 - ETHOnline 2025 (Current)
-- [x] Core auction mechanism
-- [x] Lit Protocol integration
-- [x] AI agent deployment
-- [x] Multi-chain deployment
-- [ ] Mainnet preparation
+- [x] Core Uniswap V4 Hook auction
+- [x] Pyth v2 alignment (validated price paths)
+- [x] Lit MPC-only encrypted bids (FHE deferred)
+- [x] Yellow state channels + ECDSA verification
+- [x] Standardized hook events for indexing
+- [ ] End-to-end UI polish
 
 ### Phase 2 - Post-Hackathon
 - [ ] Audit completion
@@ -344,6 +332,13 @@ npm run coverage
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
 ---
+
+## 🔐 Security Notes
+
+- Hook permissions are explicitly set; `ReentrancyGuard` used where appropriate.
+- Signature recovery uses OpenZeppelin ECDSA (no unchecked `toEthSignedMessageHash` assumptions).
+- Pyth price math handles int64 → uint casting safely; basis points math validated.
+- Foundry via-IR enabled to avoid stack-depth codegen issues in large modules.
 
 ## 🙏 Acknowledgments
 
