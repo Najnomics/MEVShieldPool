@@ -214,7 +214,7 @@ Based on simulations and previous implementations:
 | **MEV Recovery** | $50M+ (simulated) |
 | **Transaction Throughput** | 10,000+ TPS (Arcology) |
 | **Latency** | <100ms (price feeds) |
-| **Privacy Level** | FHE-encrypted bids |
+| **Privacy Level** | MPC-encrypted bids (FHE deferred) |
 
 ---
 
