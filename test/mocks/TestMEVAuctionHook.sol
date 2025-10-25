@@ -40,7 +40,8 @@ contract TestMEVAuctionHook {
     }
 
     function submitEncryptedBid(bytes32 poolId, bytes calldata, bytes calldata) external payable {
-        submitBid(poolId);
+        // mirror submitBid logic for test purposes
+        this.submitBid{value: msg.value}(poolId);
     }
 }
 
