@@ -60,8 +60,8 @@ contract MEVAuctionIntegrationTest is Test {
      * @dev Integration test events
      */
     event CrossChainBidProcessed(bytes32 indexed channelId, address indexed bidder, uint256 amount);
-    event EncryptedBidDecrypted(PoolId indexed poolId, address indexed bidder, uint256 revealedAmount);
-    event MEVCapturedAndDistributed(PoolId indexed poolId, uint256 totalMEV, uint256 lpShare, uint256 protocolShare);
+    event EncryptedBidDecrypted(bytes32 indexed poolId, address indexed bidder, uint256 revealedAmount);
+    event MEVCapturedAndDistributed(bytes32 indexed poolId, uint256 totalMEV, uint256 lpShare, uint256 protocolShare);
 
     /**
      * @dev Setup integration test environment
