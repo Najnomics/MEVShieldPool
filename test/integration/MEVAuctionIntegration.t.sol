@@ -8,6 +8,7 @@ import {PythPriceHook} from "../../src/hooks/PythPriceHook.sol";
 import {YellowStateChannel} from "../../src/hooks/YellowStateChannel.sol";
 import {MockPyth} from "../mocks/MockPyth.sol";
 import {PythStructs} from "@pythnetwork/pyth-sdk-solidity/PythStructs.sol";
+import {TestMEVAuctionHook} from "../mocks/TestMEVAuctionHook.sol";
 import {IPoolManager} from "@uniswap/v4-core/src/interfaces/IPoolManager.sol";
 import {PoolManager} from "@uniswap/v4-core/src/PoolManager.sol";
 import {PoolKey} from "@uniswap/v4-core/src/types/PoolKey.sol";
