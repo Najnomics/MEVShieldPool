@@ -1,8 +1,8 @@
 # 🛡️ MEVShield Pool
 
-**AI-Powered Privacy and Cross-Chain Execution for Uniswap V4**
+AI-Powered Privacy and Cross-Chain Execution for Uniswap V4
 
-> Uniswap V4 Hook–powered MEV auction that sells first-in-block trading rights and redistributes proceeds to LPs. The protocol integrates Pyth price feeds, Lit Protocol MPC (encrypted bids), and Yellow Network state channels for cross-chain settlement.
+Uniswap V4 Hook–powered MEV auction that sells first-in-block trading rights and redistributes proceeds to LPs. The protocol integrates Pyth price feeds, Lit Protocol MPC (encrypted bids), and Yellow Network state channels for cross-chain settlement. This document provides a deep architectural overview, lifecycle flows, security assumptions, and operational guidance.
 
 [![ETHOnline 2025](https://img.shields.io/badge/ETHOnline-2025-blue)](https://ethglobal.com/events/ethonline2025)
 [![Uniswap V4](https://img.shields.io/badge/Uniswap-V4-ff007a)](https://uniswap.org)
@@ -12,7 +12,7 @@
 
 ## 🌟 Overview
 
-MEVShield Pool extends the LVR auction concept into a production-grade, Uniswap V4 Hook–based system. The protocol runs continuous block-by-block auctions for searchers to obtain priority execution. Bids can be submitted transparently or as encrypted payloads via Lit Protocol MPC; settlement can occur locally or be coordinated cross-chain via Yellow Network state channels.
+MEVShield Pool extends the LVR auction concept into a production-grade Uniswap V4 Hook–based system. It runs continuous block-aligned auctions for searchers to obtain priority execution. Bids can be submitted transparently or as encrypted payloads via Lit Protocol MPC; settlement can occur locally or be coordinated cross-chain via Yellow Network state channels.
 
 ### Key Features
 
@@ -40,21 +40,34 @@ MEVShield Pool solves these challenges through auction-based priority rights and
 
 ## 🏗️ System Architecture
 
-Core on-chain modules live under `src/`:
+### Modules (src/)
 
-- `hooks/MEVAuctionHook.sol`: Uniswap V4 `BaseHook` implementing the MEV auction lifecycle. Emits standardized events: `HookSwap`, `HookModifyLiquidity`, `MEVDetected`.
-- `hooks/PythPriceHook.sol`: Pyth pull-oracle utilities for on-chain price-based MEV analysis (aligned with Pyth SDK v2; uses `getPrice` and validation).
-- `hooks/LitEncryptionHook.sol` and `encryption/LitMPCManager.sol`: MPC-only encrypted bid flows (FHE deferred). Access control and session management via `LitProtocolLib`.
-- `settlement/YellowNetworkChannel.sol` and `hooks/YellowStateChannel.sol`: ERC‑7824-style state channels for cross-chain settlement and off-chain allowance during a session.
-- `oracles/PythPriceOracle.sol`: Gas-optimized price feed utilities and analytics with caching and batch updates.
-- `analytics/BlockscoutManager.sol` (optional): Autoscout/MCP integration (compiled with via-IR to avoid stack-depth issues).
+- `hooks/MEVAuctionHook.sol` – Uniswap V4 `BaseHook` implementing the MEV auction lifecycle.
+  - Enforces “highest bidder has rights” in `beforeSwap` for the active round.
+  - Emits standardized events: `HookSwap`, `HookModifyLiquidity`, `MEVDetected`.
+  - Tally and distribution logic for LPs and protocol.
 
-High-level flow (per auction round):
+- `hooks/PythPriceHook.sol` – Pyth pull-oracle helpers for price validation and deviation analysis.
+  - Uses `IPyth.getPrice` (v2) and `PythPriceLib.validatePrice`.
+
+- `oracles/PythPriceOracle.sol` – Gas-optimized oracle façade with caching and batch updates.
+
+- `hooks/LitEncryptionHook.sol`, `encryption/LitMPCManager.sol` – MPC-only encrypted bid flows.
+  - Access control and session management via `LitProtocolLib`.
+  - FHE is deferred to a later milestone.
+
+- `settlement/YellowNetworkChannel.sol`, `hooks/YellowStateChannel.sol` – ERC‑7824-style state channels.
+  - Dispute flow, challenge period, ECDSA verification, and safe closure.
+
+- `analytics/BlockscoutManager.sol` (optional) – Autoscout/MCP integration scaffold (via-IR build).
+
+### Lifecycle (per round)
+
 1) Searchers submit bids (transparent or encrypted via Lit MPC).
-2) `MEVAuctionHook.beforeSwap` validates auction rights for the highest bidder in the current round.
-3) `MEVAuctionHook.afterSwap` accounts detected MEV and emits standardized events for off-chain indexing.
-4) On expiry, the round is finalized; protocol fees and LP shares are accounted; encrypted bids may be processed (threshold decryption path stubbed for now).
-5) Optionally, cross-chain settlement updates balances in Yellow state channels.
+2) `beforeSwap` validates auction rights of the highest bidder for the active round.
+3) `afterSwap` computes potential MEV; emits standardized events for off-chain indexing.
+4) On expiry, round is finalized; LPs/protocol shares updated; encrypted bids may be processed (MPC path active).
+5) Optionally, cross-chain state channels update balances off-chain and settle on-chain when needed.
 
 ---
 
@@ -214,6 +227,22 @@ Based on simulations and previous implementations:
 - Blockscout Autoscout/MCP: integration scaffolded (optional), compiled via IR to avoid stack-depth.
 
 See `docs/integrations-index.md` for canonical docs links to each provider.
+
+### Contract-Level Notes
+
+- MEVAuctionHook
+  - Storage: `auctions`, `bids`, `bidders`, `asyncSwapPermissions`.
+  - Events: `HookSwap`, `HookModifyLiquidity`, `MEVDetected`.
+  - Safety: `ReentrancyGuard` on bid flows; refunds old highest bidder before updating.
+
+- PythPriceHook / PythPriceOracle
+  - Uses `getPrice` with validation; avoids unsafe casts; supports batch fees and refunds.
+
+- LitEncryptionHook / LitMPCManager
+  - Session key derivation; access control; simplified MPC-only decryption; FHE deferred.
+
+- YellowNetworkChannel / YellowStateChannel
+  - ECDSA verification; challenge windows; state-number monotonicity; balance safety checks.
 
 ### Blockscout ($10,000)
 - ✅ Custom Autoscout explorer deployment
