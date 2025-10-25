@@ -638,25 +638,25 @@ contract MEVAuctionHook is BaseHook, ReentrancyGuard, Ownable, IMEVAuction {
     
     function _beforeAddLiquidity(
         address,
-        PoolKey calldata,
+        PoolKey calldata key,
         ModifyLiquidityParams calldata,
         bytes calldata
     ) internal override returns (bytes4) {
         // Emit standardized modify liquidity event (add)
-        // Note: PoolKey not used directly here for gas; consumers can correlate via tx context if needed
-        // For better fidelity, a separate hook with PoolKey param exposure can emit richer events
-        emit HookModifyLiquidity(bytes32(0), msg.sender, true, block.timestamp);
+        PoolId poolId = key.toId();
+        emit HookModifyLiquidity(PoolId.unwrap(poolId), msg.sender, true, block.timestamp);
         return BaseHook.beforeAddLiquidity.selector;
     }
     
     function _beforeRemoveLiquidity(
         address,
-        PoolKey calldata,
+        PoolKey calldata key,
         ModifyLiquidityParams calldata,
         bytes calldata
     ) internal override returns (bytes4) {
         // Emit standardized modify liquidity event (remove)
-        emit HookModifyLiquidity(bytes32(0), msg.sender, false, block.timestamp);
+        PoolId poolId = key.toId();
+        emit HookModifyLiquidity(PoolId.unwrap(poolId), msg.sender, false, block.timestamp);
         return BaseHook.beforeRemoveLiquidity.selector;
     }
 
