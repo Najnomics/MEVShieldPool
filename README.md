@@ -244,6 +244,49 @@ See `docs/integrations-index.md` for canonical docs links to each provider.
 - YellowNetworkChannel / YellowStateChannel
   - ECDSA verification; challenge windows; state-number monotonicity; balance safety checks.
 
+## 📊 Diagrams
+
+### Auction Round Lifecycle (Sequence)
+
+```mermaid
+sequenceDiagram
+    participant Searcher
+    participant Lit as Lit MPC
+    participant Hook as MEVAuctionHook (V4)
+    participant Pool as Uniswap V4 Pool
+    participant Pyth as Pyth Oracle
+
+    Note over Searcher,Hook: Round N (active)
+    Searcher->>Hook: submitBid{value: amount} / submitEncryptedBid(...)
+    alt Encrypted bid
+        Searcher->>Lit: Encrypt(amount, conditions)
+        Lit-->>Searcher: encrypted payload (sessionKeyHash)
+        Searcher->>Hook: submitEncryptedBid(encrypted, conditions)
+        Hook-->>Hook: store encrypted bid (pending)
+    end
+    Hook-->>Pyth: getPrice(priceId)
+    Pyth-->>Hook: PythStructs.Price (validated)
+    Hook-->>Hook: update highestBid/highestBidder
+    Note over Hook,Pool: beforeSwap enforces highest bidder
+    Searcher->>Pool: swap(...)
+    Pool-->>Hook: afterSwap(amount0Delta, amount1Delta)
+    Hook-->>Hook: compute MEV, emit HookSwap/MEVDetected
+    Note over Hook: On deadline expiry → finalize round
+```
+
+### Cross-Chain Settlement (State Channel)
+
+```mermaid
+flowchart LR
+    A[Open Channel] --> B{Active}
+    B -->|Off-chain tx| C[Update Balances + Nonce]
+    C --> B
+    B -->|Challenge| D[Dispute Window]
+    D -->|Valid proof| E[Apply Latest Valid State]
+    E --> F[Close Channel]
+    B -->|Timeout| F
+```
+
 ### Blockscout ($10,000)
 - ✅ Custom Autoscout explorer deployment
 - ✅ Blockscout SDK integration
