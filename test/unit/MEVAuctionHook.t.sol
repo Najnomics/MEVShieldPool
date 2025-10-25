@@ -53,9 +53,9 @@ contract MEVAuctionHookTest is Test {
     /**
      * @dev Events for testing
      */
-    event BidSubmitted(PoolId indexed poolId, address indexed bidder, uint256 amount);
-    event AuctionWon(PoolId indexed poolId, address indexed winner, uint256 amount);
-    event MEVDistributed(PoolId indexed poolId, uint256 lpAmount, uint256 protocolAmount);
+    event BidSubmitted(bytes32 indexed poolId, address indexed bidder, uint256 amount);
+    event AuctionWon(bytes32 indexed poolId, address indexed winner, uint256 amount);
+    event MEVDistributed(bytes32 indexed poolId, uint256 lpAmount, uint256 protocolAmount);
 
     /**
      * @dev Setup function run before each test
@@ -134,7 +134,7 @@ contract MEVAuctionHookTest is Test {
         vm.deal(bidder1, bidAmount + INITIAL_BALANCE);
         
         vm.expectEmit(true, true, false, true);
-        emit BidSubmitted(testPoolId, bidder1, bidAmount);
+        emit BidSubmitted(PoolId.unwrap(testPoolId), bidder1, bidAmount);
         
         mevHook.submitBid{value: bidAmount}(PoolId.unwrap(testPoolId));
         
