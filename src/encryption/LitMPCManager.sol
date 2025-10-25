@@ -214,22 +214,22 @@ contract LitMPCManager is ILitEncryption, Ownable, ReentrancyGuard {
     
     /// @dev Decrypt winning bids using threshold signatures
     /// @param poolId Pool identifier for the auction
-    /// @param encryptedBids Array of encrypted bids to decrypt
-    /// @param signatures Threshold signatures from MPC network
+    /// @param bidsToDecrypt Array of encrypted bids to decrypt
+    /// @param thresholdSignatures Threshold signatures from MPC network
     /// @return decryptedAmounts Array of decrypted bid amounts
     function decryptWinningBids(
         bytes32 poolId,
-        EncryptedBid[] calldata encryptedBids,
-        bytes[] calldata signatures
+        EncryptedBid[] calldata bidsToDecrypt,
+        bytes[] calldata thresholdSignatures
     ) external override nonReentrant returns (uint256[] memory decryptedAmounts) {
         EnhancedMPCParams storage mpcParams = poolMPCParams[poolId];
         require(mpcParams.totalNodes > 0, "Pool MPC not initialized");
-        require(signatures.length >= mpcParams.threshold, "Insufficient signatures");
+        require(thresholdSignatures.length >= mpcParams.threshold, "Insufficient signatures");
         
-        decryptedAmounts = new uint256[](encryptedBids.length);
+        decryptedAmounts = new uint256[](bidsToDecrypt.length);
         
-        for (uint256 i = 0; i < encryptedBids.length; i++) {
-            EncryptedBid calldata bid = encryptedBids[i];
+        for (uint256 i = 0; i < bidsToDecrypt.length; i++) {
+            EncryptedBid calldata bid = bidsToDecrypt[i];
             
             // Verify access conditions
             bool accessValid = validateAccessConditions(bid.bidder, bid.accessControlConditions);
@@ -239,7 +239,7 @@ contract LitMPCManager is ILitEncryption, Ownable, ReentrancyGuard {
             uint256 decryptedAmount = _performThresholdDecryption(
                 bid.encryptedAmount,
                 bid.sessionKeyHash,
-                signatures[i % signatures.length],
+                thresholdSignatures[i % thresholdSignatures.length],
                 mpcParams
             );
             

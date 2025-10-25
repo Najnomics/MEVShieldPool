@@ -83,7 +83,7 @@ library HookMiner {
      * @dev Computes CREATE2 address for hook deployment
      * @param deployer Address of the deployer
      * @param salt Salt value for CREATE2
-     * @param initCodeHash Hash of the initialization code
+     * @param initCode Initialization code for the contract
      * @return predictedAddress The predicted address
      */
     function computeCreate2Address(

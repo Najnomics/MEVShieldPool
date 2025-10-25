@@ -1,0 +1,48 @@
+{
+  "name": "mevshield-lighthouse-integration",
+  "version": "1.0.0",
+  "description": "MEV Data Monetization using Lighthouse DataCoins",
+  "main": "src/MEVDataCoinEngine.js",
+  "scripts": {
+    "start": "node src/DataMarketplaceDemo.js",
+    "demo": "node src/DataMarketplaceDemo.js",
+    "test": "jest",
+    "lint": "eslint src/",
+    "build": "webpack --mode production"
+  },
+  "keywords": [
+    "MEV",
+    "lighthouse",
+    "datacoins",
+    "web3",
+    "ethereum",
+    "ipfs",
+    "data-monetization",
+    "defi"
+  ],
+  "author": "MEVShield Pool Team",
+  "license": "MIT",
+  "dependencies": {
+    "@lighthouse-web3/sdk": "^0.2.7",
+    "ethers": "^6.7.1",
+    "crypto": "^1.0.1",
+    "dotenv": "^16.3.1",
+    "express": "^4.18.2",
+    "ws": "^8.14.2",
+    "node-cron": "^3.0.2"
+  },
+  "devDependencies": {
+    "jest": "^29.7.0",
+    "eslint": "^8.52.0",
+    "webpack": "^5.89.0",
+    "webpack-cli": "^5.1.4"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/najnomics/MEVShieldPool"
+  },
+  "bugs": {
+    "url": "https://github.com/najnomics/MEVShieldPool/issues"
+  },
+  "homepage": "https://github.com/najnomics/MEVShieldPool#readme"
+}
