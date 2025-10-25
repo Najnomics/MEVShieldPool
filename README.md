@@ -320,10 +320,8 @@ flowchart LR
 - ✅ 10,000+ TPS deployment
 - [Documentation](https://docs.arcology.network)
 
-### Hardhat ($5,000)
-- ✅ Hardhat 3 Alpha development
-- ✅ Multi-chain testing and deployment
-- [Documentation](https://hardhat.org)
+### Hardhat
+- Not applicable for prize alignment (Foundry toolchain used)
 
 ---
 
