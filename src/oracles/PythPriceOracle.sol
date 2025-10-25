@@ -185,8 +185,9 @@ contract PythPriceOracle is IPythPriceOracle, Ownable, ReentrancyGuard {
         
         // Calculate price deviation in basis points
         int64 priceDiff = currentPrice.price - swapPrice;
-        uint256 absDiff = priceDiff < 0 ? uint256(-priceDiff) : uint256(priceDiff);
-        uint256 deviationBps = (absDiff * 10000) / uint256(currentPrice.price > 0 ? currentPrice.price : 1);
+        uint256 absDiff = priceDiff < 0 ? uint256(uint64(-priceDiff)) : uint256(uint64(priceDiff));
+        uint64 absPrice = currentPrice.price > 0 ? uint64(currentPrice.price) : 1;
+        uint256 deviationBps = (absDiff * 10000) / uint256(absPrice);
         
         // Only consider significant deviations
         if (deviationBps < mevConfig.deviationThresholdBps) {
@@ -407,8 +408,8 @@ contract PythPriceOracle is IPythPriceOracle, Ownable, ReentrancyGuard {
             pyth.updatePriceFeeds{value: fee}(updateDataArray[i]);
         }
         
-        // Update statistics
-        _updateFeedStats(new bytes[](0), gasStart); // Pass empty array as we handled multiple
+        // Update statistics - no update needed for batch
+        // Statistics will be updated individually per feed above
         
         // Refund excess payment
         if (msg.value > totalFee) {

@@ -331,8 +331,8 @@ contract YellowStateChannel is IYellowNetwork, ReentrancyGuard, Ownable {
             stateRoot
         ));
 
-        // Convert to Ethereum signed message hash
-        bytes32 ethSignedMessageHash = messageHash.toEthSignedMessageHash();
+        // Recover signature without eth message prefix
+        bytes32 ethSignedMessageHash = messageHash;
 
         // For production, would verify both signatures separately
         // This is a simplified verification for demonstration
@@ -508,7 +508,7 @@ contract YellowStateChannel is IYellowNetwork, ReentrancyGuard, Ownable {
             stateUpdate.timestamp
         ));
         
-        bytes32 ethSignedMessageHash = messageHash.toEthSignedMessageHash();
+        bytes32 ethSignedMessageHash = messageHash;
         
         // Verify both signatures
         address recovered1 = ethSignedMessageHash.recover(stateUpdate.participant1Signature);

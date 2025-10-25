@@ -83,7 +83,7 @@ contract YellowNetworkChannelTest is Test {
         assertEq(channel.balance1, deposit1, "Balance1 should match deposit");
         assertEq(channel.balance2, deposit2, "Balance2 should match expected");
         assertEq(channel.nonce, CHANNEL_NONCE_START, "Nonce should start at 1");
-        assertTrue(channel.timeout > block.timestamp, "Timeout should be in future");
+        assertTrue(channel.challengeDeadline > block.timestamp, "Challenge deadline should be in future");
     }
 
     /**
@@ -245,7 +245,7 @@ contract YellowNetworkChannelTest is Test {
         
         // Get initial timeout
         YellowStateChannel.EnhancedStateChannel memory initialChannel = yellowChannel.getChannel(channelId);
-        uint256 originalTimeout = initialChannel.timeout;
+        uint256 originalTimeout = initialChannel.challengeDeadline;
         
         // Fast forward past timeout
         vm.warp(originalTimeout + 1);

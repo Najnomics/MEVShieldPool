@@ -204,7 +204,7 @@ contract PythPriceHook is IPythPriceOracle, Ownable, ReentrancyGuard {
             });
             
             mevOpportunities[priceId].push(opportunity);
-            totalMEVDetected += estimatedProfit;
+            totalMEVDetected[priceId] += estimatedProfit;
             
             emit MEVOpportunityDetected(priceId, deviationBps, estimatedProfit);
         }
@@ -406,7 +406,11 @@ contract PythPriceHook is IPythPriceOracle, Ownable, ReentrancyGuard {
     
     /**
      * @dev Get performance metrics
-     * @return metrics Performance data structure
+     * @return _totalUpdates Total number of price updates
+     * @return _totalMEVDetected Total MEV detected
+     * @return _totalMEVCaptured Total MEV captured
+     * @return _averageLatency Average update latency
+     * @return _activePriceFeeds Number of active price feeds
      */
     function getPerformanceMetrics() external view returns (
         uint256 _totalUpdates,
@@ -416,15 +420,18 @@ contract PythPriceHook is IPythPriceOracle, Ownable, ReentrancyGuard {
         uint256 _activePriceFeeds
     ) {
         uint256 activeCount = 0;
+        uint256 totalMEVSum = 0;
+        
         for (uint256 i = 0; i < priceFeeds.length; i++) {
             if (priceFeeds[i].active) {
                 activeCount++;
+                totalMEVSum += totalMEVDetected[priceFeeds[i].priceId];
             }
         }
         
         return (
             totalUpdates,
-            totalMEVDetected,
+            totalMEVSum,
             totalMEVCaptured,
             averageUpdateLatency,
             activeCount
@@ -438,6 +445,37 @@ contract PythPriceHook is IPythPriceOracle, Ownable, ReentrancyGuard {
      */
     function getUpdateFee(bytes[] calldata updateData) external view returns (uint256 fee) {
         return pyth.getUpdateFee(updateData);
+    }
+    
+    /**
+     * @dev Analyze MEV opportunity based on price deviation
+     * @param priceId Pyth price feed identifier
+     * @param swapPrice Proposed swap price
+     * @return mevValue Estimated MEV value in wei
+     */
+    function analyzeMEVOpportunity(
+        bytes32 priceId,
+        int64 swapPrice
+    ) external view override returns (uint256 mevValue) {
+        // Get current price from Pyth
+        PythStructs.Price memory currentPrice = pyth.getPriceUnsafe(priceId);
+        
+        if (currentPrice.price <= 0) {
+            return 0; // Invalid price data
+        }
+        
+        // Calculate price deviation
+        int64 priceDiff = swapPrice - currentPrice.price;
+        uint256 absDiff = priceDiff < 0 ? uint256(uint64(-priceDiff)) : uint256(uint64(priceDiff));
+        
+        // Calculate MEV value based on deviation (simplified)
+        // In production, this would use more sophisticated MEV detection algorithms
+        if (absDiff > 0) {
+            uint64 priceValue = currentPrice.price > 0 ? uint64(currentPrice.price) : 1;
+            mevValue = (absDiff * 1e18) / uint256(priceValue);
+        }
+        
+        return mevValue;
     }
     
     /**

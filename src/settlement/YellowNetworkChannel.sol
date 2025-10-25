@@ -191,9 +191,6 @@ contract YellowNetworkChannel is Ownable, ReentrancyGuard {
                             CONSTRUCTOR
     //////////////////////////////////////////////////////////////*/
 
-    constructor(address _owner) {
-        _transferOwnership(_owner);
-    }
 
     /*//////////////////////////////////////////////////////////////
                           CHANNEL MANAGEMENT
@@ -469,7 +466,7 @@ contract YellowNetworkChannel is Ownable, ReentrancyGuard {
         );
         
         require(
-            messageHash.toEthSignedMessageHash().recover(signature) == session.searcher,
+            messageHash.recover(signature) == session.searcher,
             "Invalid signature"
         );
         
@@ -664,7 +661,7 @@ contract YellowNetworkChannel is Ownable, ReentrancyGuard {
     ) internal pure {
         bytes32 messageHash = keccak256(
             abi.encodePacked(channelId, stateHash, stateNumber)
-        ).toEthSignedMessageHash();
+        );
         
         require(
             messageHash.recover(signature1) == participant1,

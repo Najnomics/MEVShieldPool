@@ -22,7 +22,13 @@ import "@openzeppelin/contracts/utils/math/Math.sol";
 contract ParallelMEVProcessor is Ownable, ReentrancyGuard {
     using Math for uint256;
     
-    constructor(address initialOwner) Ownable(initialOwner) {}
+    constructor(address initialOwner) Ownable(initialOwner) {
+        // Initialize performance metrics
+        performanceMetrics["totalThroughput"] = 0;
+        performanceMetrics["averageLatency"] = 0;
+        performanceMetrics["peakTPS"] = 0;
+        performanceMetrics["totalGasOptimized"] = 0;
+    }
 
     /*//////////////////////////////////////////////////////////////
                                 EVENTS
@@ -133,15 +139,6 @@ contract ParallelMEVProcessor is Ownable, ReentrancyGuard {
                             CONSTRUCTOR
     //////////////////////////////////////////////////////////////*/
 
-    constructor(address _owner) {
-        _transferOwnership(_owner);
-        
-        // Initialize performance metrics
-        performanceMetrics["totalThroughput"] = 0;
-        performanceMetrics["averageLatency"] = 0;
-        performanceMetrics["peakTPS"] = 0;
-        performanceMetrics["totalGasOptimized"] = 0;
-    }
 
     /*//////////////////////////////////////////////////////////////
                         PARALLEL EXECUTION
@@ -254,7 +251,7 @@ contract ParallelMEVProcessor is Ownable, ReentrancyGuard {
      * @notice Execute opportunities across multiple parallel threads
      * @param batchId The batch identifier
      * @param opportunityIds Array of opportunity IDs to process
-     * @return totalProfit Total profit generated from execution
+     * @return batchProfit Total profit generated from execution
      */
     function _executeParallelThreads(
         uint256 batchId,
@@ -493,7 +490,11 @@ contract ParallelMEVProcessor is Ownable, ReentrancyGuard {
 
     /**
      * @notice Get current system status
-     * @return status System performance status
+     * @return queueLength Number of queued opportunities
+     * @return activeThreadCount Number of active processing threads
+     * @return totalProcessedCount Total opportunities processed
+     * @return totalProfitAmount Total profit generated
+     * @return currentTPS Current transactions per second
      */
     function getSystemStatus() external view returns (
         uint256 queueLength,
@@ -550,7 +551,10 @@ contract ParallelMEVProcessor is Ownable, ReentrancyGuard {
 
     /**
      * @notice Get performance metrics
-     * @return metrics Complete performance data
+     * @return totalThroughput Total system throughput
+     * @return averageLatency Average execution latency
+     * @return peakTPS Peak transactions per second
+     * @return totalGasOptimized Total gas optimized
      */
     function getPerformanceMetrics() external view returns (
         uint256 totalThroughput,

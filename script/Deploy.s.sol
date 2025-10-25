@@ -11,6 +11,7 @@ import {PoolManager} from "@uniswap/v4-core/src/PoolManager.sol";
 import {Currency} from "@uniswap/v4-core/src/types/Currency.sol";
 import {PoolKey} from "@uniswap/v4-core/src/types/PoolKey.sol";
 import {IHooks} from "@uniswap/v4-core/src/interfaces/IHooks.sol";
+import {IPythPriceOracle} from "../src/interfaces/IPythPriceOracle.sol";
 
 /**
  * @title Deploy
@@ -165,7 +166,7 @@ contract Deploy is Script {
         deployed.mevAuctionHook = address(new MEVAuctionHook(
             IPoolManager(deployed.poolManager),
             LitEncryptionHook(deployed.litEncryption),
-            PythPriceHook(deployed.pythPriceHook)
+            IPythPriceOracle(deployed.pythPriceHook)
         ));
         emit ContractDeployed("MEVAuctionHook", deployed.mevAuctionHook, config.chainId);
         console.log("MEVAuctionHook deployed at:", deployed.mevAuctionHook);

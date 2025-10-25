@@ -90,6 +90,24 @@ contract MEVAuctionHook is BaseHook, ReentrancyGuard, Ownable, IMEVAuction {
     event MEVDetected(PoolId indexed poolId, uint256 mevValue);
 
     /**
+     * @dev Standardized Uniswap V4 hook events (alignment with UF guidance)
+     */
+    event HookSwap(
+        bytes32 indexed poolId,
+        int128 amount0Delta,
+        int128 amount1Delta,
+        uint256 mevValue,
+        uint256 timestamp
+    );
+
+    event HookModifyLiquidity(
+        bytes32 indexed poolId,
+        address indexed sender,
+        bool add,
+        uint256 timestamp
+    );
+
+    /**
      * @dev Constructor initializes the hook with required contracts
      * @param _poolManager Uniswap V4 pool manager
      * @param _litEncryption Lit Protocol encryption contract
@@ -599,6 +617,14 @@ contract MEVAuctionHook is BaseHook, ReentrancyGuard, Ownable, IMEVAuction {
             auctions[poolId].totalMEVCollected += mevValue;
             emit MEVDetected(poolId, mevValue);
         }
+
+        emit HookSwap(
+            PoolId.unwrap(poolId),
+            amount0Delta,
+            amount1Delta,
+            mevValue,
+            block.timestamp
+        );
         
         return (BaseHook.afterSwap.selector, 0);
     }
@@ -616,6 +642,10 @@ contract MEVAuctionHook is BaseHook, ReentrancyGuard, Ownable, IMEVAuction {
         ModifyLiquidityParams calldata,
         bytes calldata
     ) internal override returns (bytes4) {
+        // Emit standardized modify liquidity event (add)
+        // Note: PoolKey not used directly here for gas; consumers can correlate via tx context if needed
+        // For better fidelity, a separate hook with PoolKey param exposure can emit richer events
+        emit HookModifyLiquidity(bytes32(0), msg.sender, true, block.timestamp);
         return BaseHook.beforeAddLiquidity.selector;
     }
     
@@ -625,6 +655,8 @@ contract MEVAuctionHook is BaseHook, ReentrancyGuard, Ownable, IMEVAuction {
         ModifyLiquidityParams calldata,
         bytes calldata
     ) internal override returns (bytes4) {
+        // Emit standardized modify liquidity event (remove)
+        emit HookModifyLiquidity(bytes32(0), msg.sender, false, block.timestamp);
         return BaseHook.beforeRemoveLiquidity.selector;
     }
 

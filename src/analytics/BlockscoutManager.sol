@@ -243,28 +243,26 @@ contract BlockscoutManager is Ownable, ReentrancyGuard {
         require(bytes(rpcUrl).length > 0, "Invalid RPC URL");
         require(chainId > 0, "Invalid chain ID");
         
-        // Generate deployment ID
-        deploymentId = keccak256(abi.encodePacked(
+        // Generate deployment ID (packed -> encode to reduce inline asm pressure)
+        deploymentId = keccak256(abi.encode(
             explorerName,
             chainId,
             msg.sender,
             block.timestamp
         ));
         
-        // Update Autoscout configuration
-        autoscoutConfig = AutoscoutConfig({
-            explorerName: explorerName,
-            chainName: chainName,
-            chainId: chainId,
-            rpcUrl: rpcUrl,
-            currency: currency,
-            isTestnet: isTestnet,
-            logoUrl: logoUrl,
-            brandColor: brandColor,
-            deployerAddress: msg.sender,
-            deploymentTime: block.timestamp,
-            status: AutoscoutStatus.PENDING
-        });
+        // Update Autoscout configuration - split initialization to avoid stack too deep
+        autoscoutConfig.explorerName = explorerName;
+        autoscoutConfig.chainName = chainName;
+        autoscoutConfig.chainId = chainId;
+        autoscoutConfig.rpcUrl = rpcUrl;
+        autoscoutConfig.currency = currency;
+        autoscoutConfig.isTestnet = isTestnet;
+        autoscoutConfig.logoUrl = logoUrl;
+        autoscoutConfig.brandColor = brandColor;
+        autoscoutConfig.deployerAddress = msg.sender;
+        autoscoutConfig.deploymentTime = block.timestamp;
+        autoscoutConfig.status = AutoscoutStatus.PENDING;
         
         // Initiate deployment process
         _initiateAutoscoutDeployment();
@@ -272,7 +270,11 @@ contract BlockscoutManager is Ownable, ReentrancyGuard {
         // Update statistics
         stats.totalExplorersDeployed++;
         
-        emit AutoscoutDeploymentRequested(explorerName, chainId, msg.sender);
+        // Emit event using cached values
+        string memory cachedExplorerName = explorerName;
+        uint256 cachedChainId = chainId;
+        address cachedSender = msg.sender;
+        emit AutoscoutDeploymentRequested(cachedExplorerName, cachedChainId, cachedSender);
         return deploymentId;
     }
     
@@ -346,7 +348,7 @@ contract BlockscoutManager is Ownable, ReentrancyGuard {
         
         // Query MEV data through MCP server
         bytes memory mevQueryParams = abi.encode(poolId, periodStart, periodEnd);
-        bytes32 queryId = keccak256(abi.encodePacked(
+        bytes32 queryId = keccak256(abi.encode(
             "mev_analysis",
             mevQueryParams,
             block.timestamp
@@ -382,11 +384,11 @@ contract BlockscoutManager is Ownable, ReentrancyGuard {
         stats.activeExplorers++;
         
         // Generate explorer URL
-        string memory explorerUrl = string(abi.encodePacked(
+        string memory explorerUrl = string.concat(
             "https://",
             autoscoutConfig.explorerName,
             ".blockscout.com"
-        ));
+        );
         
         emit AutoscoutDeploymentCompleted(
             autoscoutConfig.explorerName,
@@ -450,7 +452,7 @@ contract BlockscoutManager is Ownable, ReentrancyGuard {
     /// @param queryId Query identifier
     /// @return hash Generated response hash
     function _generateResponseHash(bytes32 queryId) internal view returns (string memory hash) {
-        bytes32 hashBytes = keccak256(abi.encodePacked(
+        bytes32 hashBytes = keccak256(abi.encode(
             queryId,
             block.timestamp,
             block.prevrandao
@@ -468,13 +470,13 @@ contract BlockscoutManager is Ownable, ReentrancyGuard {
         uint256 periodStart,
         uint256 periodEnd
     ) internal view returns (string memory hash) {
-        bytes32 hashBytes = keccak256(abi.encodePacked(
+        bytes32 hashBytes = keccak256(abi.encode(
             poolId,
             periodStart,
             periodEnd,
             block.timestamp
         ));
-        return string(abi.encodePacked("ipfs://", _bytes32ToHex(hashBytes)));
+        return string.concat("ipfs://", _bytes32ToHex(hashBytes));
     }
     
     /// @dev Convert bytes32 to hex string

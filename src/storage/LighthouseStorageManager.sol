@@ -395,12 +395,13 @@ contract LighthouseStorageManager is Ownable, ReentrancyGuard {
         uint256 result = 0;
         for (uint256 i = 0; i < 40; i++) {
             uint256 digit;
-            if (data[i] >= 48 && data[i] <= 57) { // 0-9
-                digit = uint256(uint8(data[i])) - 48;
-            } else if (data[i] >= 97 && data[i] <= 102) { // a-f
-                digit = uint256(uint8(data[i])) - 87;
-            } else if (data[i] >= 65 && data[i] <= 70) { // A-F
-                digit = uint256(uint8(data[i])) - 55;
+            uint8 charCode = uint8(data[i]);
+            if (charCode >= 48 && charCode <= 57) { // 0-9
+                digit = uint256(charCode) - 48;
+            } else if (charCode >= 97 && charCode <= 102) { // a-f
+                digit = uint256(charCode) - 87;
+            } else if (charCode >= 65 && charCode <= 70) { // A-F
+                digit = uint256(charCode) - 55;
             } else {
                 revert("Invalid hex character");
             }
