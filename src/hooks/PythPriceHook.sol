@@ -458,18 +458,14 @@ contract PythPriceHook is IPythPriceOracle, Ownable, ReentrancyGuard {
         int64 swapPrice
     ) external view override returns (uint256 mevValue) {
         // Get current price from Pyth
-        PythStructs.Price memory currentPrice = pyth.getPriceUnsafe(priceId);
-        
-        if (currentPrice.price <= 0) {
-            return 0; // Invalid price data
-        }
+        PythStructs.Price memory currentPrice = pyth.getPrice(priceId);
+        PythPriceLib.validatePrice(currentPrice);
         
         // Calculate price deviation
         int64 priceDiff = swapPrice - currentPrice.price;
         uint256 absDiff = priceDiff < 0 ? uint256(uint64(-priceDiff)) : uint256(uint64(priceDiff));
         
         // Calculate MEV value based on deviation (simplified)
-        // In production, this would use more sophisticated MEV detection algorithms
         if (absDiff > 0) {
             uint64 priceValue = currentPrice.price > 0 ? uint64(currentPrice.price) : 1;
             mevValue = (absDiff * 1e18) / uint256(priceValue);
