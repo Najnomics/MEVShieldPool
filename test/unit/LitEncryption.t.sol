@@ -351,8 +351,8 @@ contract LitEncryptionTest is Test {
         // Prepare inputs for decryption using stored bids
         LitEncryptionHook.EncryptedBid[] memory bids = litHook.getPoolEncryptedBids(TEST_POOL_ID);
         bytes[] memory signatures = new bytes[](bids.length);
-        signatures[0] = abi.encodePacked(bytes32(0x01));
-        signatures[1] = abi.encodePacked(bytes32(0x02));
+        signatures[0] = abi.encodePacked(uint256(1));
+        signatures[1] = abi.encodePacked(uint256(2));
 
         // Decrypt and verify amounts
         vm.prank(encryptionManager);
