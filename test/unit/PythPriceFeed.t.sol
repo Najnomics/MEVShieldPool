@@ -57,7 +57,6 @@ contract PythPriceFeedTest is Test {
         mockPyth = new MockPyth();
         
         // Deploy Pyth price hook with mock contract
-        vm.prank(priceManager);
         pythHook = new PythPriceHook(address(mockPyth));
         
         // Initialize with base ETH price and acceptable confidence for validation

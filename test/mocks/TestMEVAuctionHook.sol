@@ -40,8 +40,29 @@ contract TestMEVAuctionHook {
     }
 
     function submitEncryptedBid(bytes32 poolId, bytes calldata, bytes calldata) external payable {
-        // mirror submitBid logic for test purposes
-        this.submitBid{value: msg.value}(poolId);
+        // Simplified: reuse submitBid logic inline to preserve original msg.sender
+        require(msg.value >= AuctionLib.MIN_BID, "Bid below minimum");
+        AuctionLib.AuctionData storage auction = auctions[poolId];
+        if (!auction.isActive) {
+            auctions[poolId] = AuctionLib.AuctionData({
+                highestBid: 0,
+                highestBidder: address(0),
+                deadline: block.timestamp + AuctionLib.AUCTION_DURATION,
+                isActive: true,
+                blockHash: blockhash(block.number - 1),
+                totalMEVCollected: 0
+            });
+            auction = auctions[poolId];
+        }
+        require(!auction.isAuctionExpired(), "Auction expired");
+        if (auction.highestBid > 0 && msg.value > auction.highestBid) {
+            payable(auction.highestBidder).transfer(auction.highestBid);
+        }
+        if (msg.value > auction.highestBid) {
+            auction.highestBid = msg.value;
+            auction.highestBidder = msg.sender;
+            emit BidSubmitted(poolId, msg.sender, msg.value);
+        }
     }
 }
 
