@@ -3,6 +3,7 @@ pragma solidity ^0.8.26;
 
 import {Test, console} from "forge-std/Test.sol";
 import {MEVAuctionHook} from "../../src/hooks/MEVAuctionHook.sol";
+import {TestMEVAuctionHook} from "../mocks/TestMEVAuctionHook.sol";
 import {LitEncryptionHook} from "../../src/hooks/LitEncryptionHook.sol";
 import {PythPriceHook} from "../../src/hooks/PythPriceHook.sol";
 import {AuctionLib} from "../../src/libraries/AuctionLib.sol";
@@ -73,15 +74,11 @@ contract MEVAuctionHookTest is Test {
         // Deploy protocol contracts
         vm.startPrank(owner);
         
-        // Deploy PoolManager for testing
-        poolManager = new PoolManager(owner);
-        
-        // Deploy supporting contracts
+        // NOTE: Uniswap V4 hooks require special addresses; use lightweight test hook for unit logic
+        // Keep integration of real hook in integration tests with proper deployment tooling
         litHook = new LitEncryptionHook(owner);
         pythHook = new PythPriceHook(mockPyth);
-        
-        // Deploy main MEV auction hook
-        mevHook = new MEVAuctionHook(poolManager, litHook, pythHook);
+        mevHook = MEVAuctionHook(payable(address(new TestMEVAuctionHook())));
         
         vm.stopPrank();
         
