@@ -7,6 +7,12 @@ module.exports = function override(config, env) {
     '@react-native-async-storage/async-storage': require.resolve('localforage'),
   };
 
+  // Fix for openapi-fetch with MetaMask SDK - ensure correct resolution
+  config.resolve.alias = {
+    ...config.resolve.alias,
+    'openapi-fetch': require.resolve('openapi-fetch/dist/index.js'),
+  };
+
   // Fix for openapi-fetch with MetaMask SDK
   config.resolve.fallback = {
     ...config.resolve.fallback,

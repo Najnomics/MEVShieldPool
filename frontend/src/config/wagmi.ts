@@ -3,9 +3,10 @@ import { sepolia } from 'wagmi/chains';
 import { http } from 'wagmi';
 import { 
   metaMaskWallet,
-  rainbowWallet,
-  coinbaseWallet,
-  walletConnectWallet,
+  // Temporarily disable other wallets to focus on MetaMask
+  // rainbowWallet,
+  // coinbaseWallet,
+  // walletConnectWallet,
 } from '@rainbow-me/rainbowkit/wallets';
 import { RPC_URLS, SEPOLIA_CHAIN_ID } from './contracts';
 
@@ -46,9 +47,10 @@ export const config = getDefaultConfig({
       groupName: 'Recommended',
       wallets: [
         metaMaskWallet, // Highest priority for MetaMask
-        rainbowWallet,
-        coinbaseWallet,
-        walletConnectWallet,
+        // Temporarily disabled to avoid WalletConnect issues
+        // rainbowWallet,
+        // coinbaseWallet,
+        // walletConnectWallet,
       ],
     },
   ],
