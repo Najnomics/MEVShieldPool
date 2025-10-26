@@ -113,22 +113,19 @@ contract PythPriceFeedTest is Test {
         PythStructs.Price memory initialPrice = pythHook.getPrice(ETH_USD_FEED_ID);
         uint256 initialTime = initialPrice.publishTime;
         
-        // Fast forward to make price stale
-        vm.warp(block.timestamp + PUBLISH_TIME_TOLERANCE + 1);
+        // Fast forward to make price stale (library uses MAX_PRICE_AGE which is 60 seconds)
+        vm.warp(block.timestamp + 61);
         
-        // Manually check if price is stale by comparing timestamps
-        PythStructs.Price memory stalePrice = pythHook.getPrice(ETH_USD_FEED_ID);
-        uint256 age = block.timestamp - stalePrice.publishTime;
-        // Verify staleness detection works (age exceeds tolerance)
-        assertTrue(age > PUBLISH_TIME_TOLERANCE, "Price should be stale");
+        // Price should revert due to staleness check in validatePrice
+        vm.expectRevert(abi.encodeWithSignature("PriceDataStale(uint256,uint256)", 61, 60));
+        pythHook.getPrice(ETH_USD_FEED_ID);
         
         // Update with fresh price
         _updateMockPrice(ETH_USD_FEED_ID, BASE_ETH_PRICE, BASE_CONFIDENCE);
         
         // Price should no longer be stale
         PythStructs.Price memory freshPrice = pythHook.getPrice(ETH_USD_FEED_ID);
-        bool isStillStale = (block.timestamp - freshPrice.publishTime) > PUBLISH_TIME_TOLERANCE;
-        // Ensure query succeeds; freshness threshold handled by library
+        assertTrue(freshPrice.publishTime > 0, "Price should be fresh after update");
     }
 
     /**
@@ -218,10 +215,12 @@ contract PythPriceFeedTest is Test {
         assertTrue(price1.price > 0 && price2.price > 0, "Prices should be retrieved");
         assertTrue(priceDiff > 0, "MEV opportunity should be detected");
         
-        // Verify MEV opportunity threshold (1% = 1000000000 with 8 decimals)
-        uint256 thresholdAmount = (uint256(int256(price1.price)) * 50000000) / 1000000000; // 0.5%
-        bool isMEVOpportunity = priceDiff >= thresholdAmount;
-        assertTrue(isMEVOpportunity, "MEV opportunity should be detected");
+        // Calculate price difference in basis points
+        // priceDiff is 2000000000 (2% of 200000000000)
+        // This is 0.01 * 200000000000 = 2000000000 in 8 decimals
+        uint256 priceDiffBps = (priceDiff * 10000) / uint256(int256(price1.price));
+        // 2000000000 / 200000000000 * 10000 = 100 bps = 1%
+        assertTrue(priceDiffBps >= 100, "MEV opportunity should be detected (1% price difference)");
     }
 
     /**

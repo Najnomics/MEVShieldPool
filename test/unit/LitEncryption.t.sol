@@ -167,18 +167,22 @@ contract LitEncryptionTest is Test {
             "Fresh session should be valid"
         );
         
-        // Fast forward within expiry window
-        vm.warp(block.timestamp + 30 minutes);
+        // Fast forward within expiry window (30 minutes)
+        vm.warp(sessionTimestamp + 30 minutes);
         assertTrue(
             LitProtocolLib.isSessionValid(sessionTimestamp),
             "Session should still be valid within window"
         );
         
-        // Fast forward past expiry (SESSION_KEY_EXPIRY is 1 hour)
-        vm.warp(sessionTimestamp + LitProtocolLib.SESSION_KEY_EXPIRY + 1);
-        // Verify session is expired
-        bool isExpired = !LitProtocolLib.isSessionValid(sessionTimestamp);
-        assertTrue(isExpired, "Session should expire after timeout");
+        // Fast forward past expiry (SESSION_KEY_EXPIRY is 1 hour = 3600 seconds)
+        // Need to warp past sessionTimestamp + SESSION_KEY_EXPIRY
+        // sessionTimestamp = 1801, SESSION_KEY_EXPIRY = 3600, so we need block.timestamp > 5401
+        vm.warp(sessionTimestamp + LitProtocolLib.SESSION_KEY_EXPIRY + 1 seconds);
+        // Verify session is expired (block.timestamp (5402) > sessionTimestamp (1801) + SESSION_KEY_EXPIRY (3600) = 5401)
+        assertFalse(
+            LitProtocolLib.isSessionValid(sessionTimestamp),
+            "Session should expire after timeout"
+        );
     }
 
     /**

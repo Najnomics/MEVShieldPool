@@ -102,10 +102,13 @@ contract YellowNetworkChannelTest is Test {
         YellowStateChannel.EnhancedStateChannel memory channel = yellowChannel.getChannel(channelId);
         uint256 newBalance1 = CHANNEL_DEPOSIT - 1 ether;
         uint256 newBalance2 = CHANNEL_DEPOSIT + 1 ether;
-        uint64 newNonce = uint64(channel.nonce + 1);
+        uint256 newNonce = channel.nonce + 1;
+        
+        // Calculate the new state root that will be used by the contract
+        bytes32 newStateRoot = keccak256(abi.encodePacked(channelId, newNonce, newBalance1, newBalance2));
         
         // Generate valid signature for state update with correct message hash
-        bytes memory signature = _generateMockSignature(channelId, newNonce, newBalance1, newBalance2, channel.stateRoot);
+        bytes memory signature = _generateMockSignature(channelId, newNonce, newBalance1, newBalance2, newStateRoot);
         
         // Verify via state after call instead of event pre-expectations
         
@@ -122,7 +125,7 @@ contract YellowNetworkChannelTest is Test {
         YellowStateChannel.EnhancedStateChannel memory updatedChannel = yellowChannel.getChannel(channelId);
         assertEq(updatedChannel.balance1, newBalance1, "Balance1 should be updated");
         assertEq(updatedChannel.balance2, newBalance2, "Balance2 should be updated");
-        assertEq(updatedChannel.nonce, CHANNEL_NONCE_START + 1, "Nonce should increment");
+        assertEq(updatedChannel.nonce, channel.nonce + 1, "Nonce should increment");
     }
 
     /**
@@ -220,13 +223,14 @@ contract YellowNetworkChannelTest is Test {
         YellowStateChannel.EnhancedStateChannel memory crossChainChannel = yellowChannel.getChannel(crossChainChannelId);
         uint256 settlementBalance1 = 4 ether; // Net transfer from chain 2 to chain 1
         uint256 settlementBalance2 = 1 ether;
-        uint64 settlementNonce = uint64(crossChainChannel.nonce + 1);
+        uint256 settlementNonce = crossChainChannel.nonce + 1;
+        bytes32 settlementStateRoot = keccak256(abi.encodePacked(crossChainChannelId, settlementNonce, settlementBalance1, settlementBalance2));
         bytes memory crossChainSignature = _generateMockSignature(
             crossChainChannelId, 
             settlementNonce, 
             settlementBalance1, 
             settlementBalance2, 
-            crossChainChannel.stateRoot
+            settlementStateRoot
         );
         
         vm.prank(participant1);
@@ -288,8 +292,9 @@ contract YellowNetworkChannelTest is Test {
         YellowStateChannel.EnhancedStateChannel memory channelState = yellowChannel.getChannel(channelId);
         uint256 balance1 = CHANNEL_DEPOSIT - 1 ether;
         uint256 balance2 = CHANNEL_DEPOSIT + 1 ether;
-        uint64 updateNonce = uint64(channelState.nonce + 1);
-        bytes memory signature = _generateMockSignature(channelId, updateNonce, balance1, balance2, channelState.stateRoot);
+        uint256 updateNonce = channelState.nonce + 1;
+        bytes32 updateStateRoot = keccak256(abi.encodePacked(channelId, updateNonce, balance1, balance2));
+        bytes memory signature = _generateMockSignature(channelId, updateNonce, balance1, balance2, updateStateRoot);
         gasBefore = gasleft();
         vm.prank(participant1);
         yellowChannel.updateChannelState(channelId, balance1, balance2, signature);
@@ -314,15 +319,24 @@ contract YellowNetworkChannelTest is Test {
         return signature;
     }
     
-    function _generateMockSignature(bytes32 channelId, uint64 nonce, uint256 balance1, uint256 balance2, bytes32 stateRoot) internal pure returns (bytes memory signature) {
-        // Create message hash matching contract's expectation
+    /**
+     * @dev Generate valid signature using vm.sign for participant1
+     * @param channelId The channel identifier
+     * @param nonce The nonce for the signature
+     * @param balance1 Balance for participant1
+     * @param balance2 Balance for participant2
+     * @param stateRoot The state root hash
+     * @return signature Valid ECDSA signature from participant1
+     */
+    function _generateMockSignature(bytes32 channelId, uint256 nonce, uint256 balance1, uint256 balance2, bytes32 stateRoot) internal view returns (bytes memory signature) {
+        // Create message hash matching contract's expectation (without ETH prefix)
         bytes32 messageHash = keccak256(abi.encodePacked(channelId, nonce, balance1, balance2, stateRoot));
-        // Generate deterministic signature (will fail validation but passes length check)
-        signature = abi.encodePacked(
-            bytes32(uint256(messageHash)),
-            bytes32(uint256(messageHash) + 1),
-            bytes1(0x1b)
-        );
+        // Use vm.sign to generate valid signature from participant1's private key
+        // The contract uses messageHash.recover directly (no ETH signed message prefix)
+        // participant1 is address(0x2), so we use private key 2
+        uint256 participant1Key = 2;
+        (uint8 v, bytes32 r, bytes32 s) = vm.sign(participant1Key, messageHash);
+        signature = abi.encodePacked(r, s, v);
         return signature;
     }
 }
