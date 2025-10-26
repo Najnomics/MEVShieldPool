@@ -30,4 +30,4 @@ pids
 *.seed
 *.pid.lock
 
-.claude
+.claudetemp_stuff/v4-template/
