@@ -1,21 +1,16 @@
 import React from 'react';
 import { useWeb3 } from '../contexts/Web3Context';
-import { formatEther } from 'viem';
 import { 
   ChartBarIcon, 
   ShieldCheckIcon,
   ClockIcon,
-  EyeIcon,
   ArrowTrendingUpIcon
 } from '@heroicons/react/24/outline';
 
 const AnalyticsPage: React.FC = () => {
   const { 
     mevMetrics, 
-    activeAuctions, 
-    activePools,
-    isConnected,
-    isLoading 
+    isConnected
   } = useWeb3();
 
   if (!isConnected) {

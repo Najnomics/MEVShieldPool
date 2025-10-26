@@ -1,0 +1,1 @@
+"use strict";(self.webpackChunkmevshield_pool_frontend=self.webpackChunkmevshield_pool_frontend||[]).push([[4561],{94561:(e,l,n)=>{n.r(l),n.d(l,{default:()=>s.n});var s=n(73228)}}]);

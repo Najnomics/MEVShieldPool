@@ -3,10 +3,7 @@ import { useWeb3 } from '../contexts/Web3Context';
 import { 
   Cog6ToothIcon, 
   ShieldCheckIcon, 
-  BellIcon,
-  EyeIcon,
-  KeyIcon,
-  GlobeAltIcon
+  BellIcon
 } from '@heroicons/react/24/outline';
 
 const Settings: React.FC = () => {
