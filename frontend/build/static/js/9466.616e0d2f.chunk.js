@@ -1,1 +1,0 @@
-(self.webpackChunkmevshield_pool_frontend=self.webpackChunkmevshield_pool_frontend||[]).push([[9466],{15340:()=>{},47790:()=>{},79838:()=>{}}]);

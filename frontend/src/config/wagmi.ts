@@ -16,7 +16,6 @@ const projectId = process.env.REACT_APP_WALLETCONNECT_PROJECT_ID || 'a1b2c3d4e5f
 
 // Fallback RPC URL if the main one fails
 const rpcUrl = RPC_URLS[SEPOLIA_CHAIN_ID];
-// const fallbackRpcUrl = 'https://rpc.sepolia.org'; // Reserved for future use
 
 /**
  * Wagmi config inspired by Scaffold-ETH 2 patterns
