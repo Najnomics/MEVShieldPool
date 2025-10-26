@@ -17,7 +17,7 @@ contract InitializePool is Script {
 
     // Sepolia addresses
     address constant POOL_MANAGER = 0xE03A1074c86CFeDd5C142C4F04F1a1536e203543;
-    address constant MEV_HOOK = 0x44369EA8F59Ed1Df48f8eA14aB1a42Cc07f86aC0;
+    address constant MEV_HOOK = 0xB511417B2D983e6A86dff5663A08d01462036aC0;
     
     // WETH9 on Sepolia
     address constant WETH9 = 0xfFf9976782d46CC05630D1f6eBAb18b2324d6B14;

@@ -6,7 +6,7 @@
 
 | Contract | Address | Status | Etherscan |
 |----------|---------|--------|-----------|
-| **MEVAuctionHook** | `0xB511417B2D983e6A86dff5663A08d01462036aC0` | ✅ Deployed & Verified | [View](https://sepolia.etherscan.io/address/0xe2f92333b52765af0405c44a90e626fc683b6ac0) |
+| **MEVAuctionHook** | `0xB511417B2D983e6A86dff5663A08d01462036aC0` | ✅ Deployed & Verified | [View](https://sepolia.etherscan.io/address/0xB511417B2D983e6A86dff5663A08d01462036aC0) |
 | **LitEncryptionHook** | `0x5eBD47dc03f512Afa54aB323B79060792aE56Ea7` | ✅ Deployed | [View](https://sepolia.etherscan.io/address/0x5ebd47dc03f512afa54ab323b79060792ae56ea7) |
 | **PythPriceHook** | `0x3d0f3EB4Bd1263a02BF70b2a6BcEaD21E7E654d2` | ✅ Deployed | [View](https://sepolia.etherscan.io/address/0x3d0f3eb4bd1263a02bf70b2a6bcead21e7e654d2) |
 | **YellowStateChannel** | `0x1Bd94cB5Eccb3968a229814c7CAe8B97795cE177` | ✅ Deployed | [View](https://sepolia.etherscan.io/address/0x1bd94cb5eccb3968a229814c7cae8b97795ce177) |
