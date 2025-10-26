@@ -1,5 +1,6 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useWeb3 } from '../contexts/Web3Context';
+import { useConnect } from 'wagmi';
 import { formatEther } from 'viem';
 import { 
   CurrencyDollarIcon, 
@@ -10,6 +11,8 @@ import {
   ArrowTrendingUpIcon
 } from '@heroicons/react/24/outline';
 import LoadingSpinner from '../components/LoadingSpinner';
+import { connectMetaMaskManually, isMetaMaskInstalled } from '../utils/metamask-helper';
+import { toast } from 'react-toastify';
 
 const Dashboard: React.FC = () => {
   const { 
@@ -20,17 +23,74 @@ const Dashboard: React.FC = () => {
     isConnected 
   } = useWeb3();
 
+  const { connect, connectors } = useConnect();
+  const [isConnecting, setIsConnecting] = useState(false);
+
+  const handleManualConnect = async () => {
+    if (!isMetaMaskInstalled()) {
+      toast.error('MetaMask is not installed. Please install MetaMask extension.');
+      return;
+    }
+
+    setIsConnecting(true);
+    try {
+      // First, connect MetaMask directly
+      await connectMetaMaskManually();
+      console.log('MetaMask connected! Connecting with Wagmi...');
+      
+      // Find MetaMask connector and connect through Wagmi
+      const metaMaskConnector = connectors.find(connector => 
+        connector.id === 'metaMask' || connector.name === 'MetaMask'
+      );
+      
+      if (metaMaskConnector) {
+        connect({ connector: metaMaskConnector });
+        toast.success('MetaMask connected successfully!');
+      } else {
+        // Fallback: reload page to let Wagmi auto-detect
+        toast.success('MetaMask connected! Refreshing...');
+        setTimeout(() => window.location.reload(), 1000);
+      }
+    } catch (error: any) {
+      console.error('Connection error:', error);
+      toast.error(error.message || 'Failed to connect MetaMask');
+    } finally {
+      setIsConnecting(false);
+    }
+  };
+
   if (!isConnected) {
     return (
       <div className="min-h-96 flex items-center justify-center">
-        <div className="text-center backdrop-blur-xl bg-gradient-to-br from-gray-800/40 to-gray-900/40 border border-gray-700/30 rounded-2xl p-8 shadow-2xl">
+        <div className="text-center backdrop-blur-xl bg-gradient-to-br from-gray-800/40 to-gray-900/40 border border-gray-700/30 rounded-2xl p-8 shadow-2xl max-w-md">
           <ShieldCheckIcon className="mx-auto h-16 w-16 text-gray-400 mb-4" />
           <h3 className="text-xl font-bold text-white mb-2">
             Connect Wallet
           </h3>
-          <p className="text-gray-300">
+          <p className="text-gray-300 mb-6">
             Connect your wallet to view MEV auction dashboard.
           </p>
+          
+          {isMetaMaskInstalled() && (
+            <button
+              onClick={handleManualConnect}
+              disabled={isConnecting}
+              className="w-full px-6 py-3 bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white font-semibold rounded-xl transition-all duration-200 shadow-lg shadow-blue-500/25 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {isConnecting ? 'Connecting...' : 'Connect MetaMask Manually'}
+            </button>
+          )}
+          
+          {!isMetaMaskInstalled() && (
+            <a
+              href="https://metamask.io/download/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-block px-6 py-3 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white font-semibold rounded-xl transition-all duration-200 shadow-lg"
+            >
+              Install MetaMask
+            </a>
+          )}
         </div>
       </div>
     );

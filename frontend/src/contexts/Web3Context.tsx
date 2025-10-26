@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { useAccount, usePublicClient, useWalletClient, useChainId } from 'wagmi';
+import { useAccount, usePublicClient, useChainId, useWriteContract } from 'wagmi';
 import { Address } from 'viem';
 import { toast } from 'react-toastify';
 
@@ -134,7 +134,7 @@ export const Web3Provider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const { address, isConnected } = useAccount();
   const chainId = useChainId();
   const publicClient = usePublicClient();
-  const { data: walletClient } = useWalletClient();
+  const { writeContractAsync } = useWriteContract();
 
   // State
   const [pools, setPools] = useState<PoolData[]>([]);
@@ -195,13 +195,14 @@ export const Web3Provider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
   // Submit encrypted bid to MEV auction
   const submitBid = async (poolId: `0x${string}`, amount: bigint, _encrypted = false): Promise<string> => {
-    if (!isConnected || !walletClient || !contracts.mevAuctionHook) {
+    if (!isConnected || !contracts.mevAuctionHook || !writeContractAsync) {
       throw new Error('Wallet not connected');
     }
 
     setIsSubmittingBid(true);
     try {
-      const bidTx = await walletClient.writeContract({
+      // @ts-ignore - Wagmi v2 type inference issue
+      const bidTx = await writeContractAsync({
         address: contracts.mevAuctionHook.address,
         abi: contracts.mevAuctionHook.abi,
         functionName: 'submitBid',
@@ -211,7 +212,7 @@ export const Web3Provider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
       toast.success('Bid submitted successfully!');
       await refreshData();
-      return bidTx as unknown as string;
+      return bidTx;
     } catch (error) {
       console.error('Error submitting bid:', error);
       toast.error('Failed to submit bid');
@@ -237,13 +238,8 @@ export const Web3Provider: React.FC<{ children: ReactNode }> = ({ children }) =>
       throw new Error('Client not available');
     }
 
-    try {
-      // Price read disabled in demo build
-      return null;
-    } catch (error) {
-      console.error('Error getting price data:', error);
-      throw error;
-    }
+    // Price read disabled in demo build
+    return null;
   };
 
   // Upload data to Lighthouse Storage
@@ -284,6 +280,7 @@ export const Web3Provider: React.FC<{ children: ReactNode }> = ({ children }) =>
     if (isConnected && contracts.mevAuctionHook) {
       refreshData();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isConnected, chainId, address]);
 
   // Auto-refresh data periodically
@@ -295,6 +292,7 @@ export const Web3Provider: React.FC<{ children: ReactNode }> = ({ children }) =>
     }, 30000); // Refresh every 30 seconds
 
     return () => clearInterval(interval);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isConnected, contracts.mevAuctionHook]);
 
   // Computed values
