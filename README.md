@@ -145,11 +145,11 @@ All contracts are deployed and verified on Sepolia:
 
 | Contract | Address | Etherscan |
 |----------|---------|-----------|
-| **MEVAuctionHook** | `0x44369EA8F59Ed1Df48f8eA14aB1a42Cc07f86aC0` | [View](https://sepolia.etherscan.io/address/0x44369ea8f59ed1df48f8ea14ab1a42cc07f86ac0) |
+| **MEVAuctionHook** | `0xBA9D4C29C2cBc02dDD52419ff6b9530d136A2ac0` | [View](https://sepolia.etherscan.io/address/0xBA9D4C29C2cBc02dDD52419ff6b9530d136A2ac0) |
 | **LitEncryptionHook** | `0x5eBD47dc03f512Afa54aB323B79060792aE56Ea7` | [View](https://sepolia.etherscan.io/address/0x5ebd47dc03f512afa54ab323b79060792ae56ea7) |
 | **PythPriceHook** | `0x3d0f3EB4Bd1263a02BF70b2a6BcEaD21E7E654d2` | [View](https://sepolia.etherscan.io/address/0x3d0f3eb4bd1263a02bf70b2a6bcead21e7e654d2) |
 | **YellowStateChannel** | `0x1Bd94cB5Eccb3968a229814c7CAe8B97795cE177` | [View](https://sepolia.etherscan.io/address/0x1bd94cb5eccb3968a229814c7cae8b97795ce177) |
-| **PoolManager** | `0x000000000004444c5dc75cB358380D2e3dE08A90` | [View](https://sepolia.etherscan.io/address/0x89169deae6c7e07a12de45b6198d4022e14527cc) |
+| **PoolManager** | `0xE03A1074c86CFeDd5C142C4F04F1a1536e203543` | [View](https://sepolia.etherscan.io/address/0xE03A1074c86CFeDd5C142C4F04F1a1536e203543) |
 
 **Network**: Sepolia Testnet (Chain ID: 11155111)  
 **Pyth Contract**: `0xDd24F84d36BF92C65F92307595335bdFab5Bbd21`
