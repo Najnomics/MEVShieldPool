@@ -58,7 +58,7 @@ contract InitializePool is Script {
         // This will call the hook's beforeInitialize() which sets up the auction
         // PoolManager.initialize(PoolKey, uint160, bytes)
         bytes memory initData = "";
-        poolManager.initialize(key, sqrtPriceX96, initData);
+        poolManager.initialize(key, sqrtPriceX96);
 
         console.log("Pool initialized successfully!");
         console.log("Auction should now be active for this pool");

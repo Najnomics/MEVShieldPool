@@ -19,8 +19,8 @@ contract InitializePoolWithTokens is Script {
     // Sepolia addresses - PoolManager may need to be deployed or use different address
     // For now, we'll need to deploy our own PoolManager or use an existing one
     address constant POOL_MANAGER = 0xE03A1074c86CFeDd5C142C4F04F1a1536e203543;
-    // New MEVAuctionHook deployed with correct PoolManager
-    address constant MEV_HOOK = 0x6e5D7D71E5e2AEeE0FE6CB88eb1c525A64AcAac0;
+    // Latest MEVAuctionHook deployed with correct PoolManager
+    address constant MEV_HOOK = 0xD3839BaA9fF7D533aBCfc204a968f9F47E0DaaC0;
     
     // WETH9 on Sepolia
     address constant WETH9 = 0xfFf9976782d46CC05630D1f6eBAb18b2324d6B14;
