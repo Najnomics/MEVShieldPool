@@ -32,7 +32,7 @@ All contracts have been successfully deployed to Sepolia testnet and submitted f
 - **Etherscan**: https://sepolia.etherscan.io/address/0x1bd94cb5eccb3968a229814c7cae8b97795ce177
 
 ### 5. PoolManager (Uniswap V4)
-- **Address**: `0x89169DeAE6C7E07A12De45B6198D4022e14527cC`
+- **Address**: `0x000000000004444c5dc75cB358380D2e3dE08A90`
 - **Type**: Existing Uniswap V4 PoolManager
 - **Purpose**: Core V4 pool management
 

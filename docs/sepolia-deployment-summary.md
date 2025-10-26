@@ -16,7 +16,7 @@ These contracts are already on Sepolia and can be reused:
 
 | Contract | Address | Status |
 |----------|---------|--------|
-| PoolManager | `0x89169DeAE6C7E07A12De45B6198D4022e14527cC` | ✅ Deployed |
+| PoolManager | `0x000000000004444c5dc75cB358380D2e3dE08A90` | ✅ Deployed |
 | LitEncryptionHook | `0x5eBD47dc03f512Afa54aB323B79060792aE56Ea7` | ✅ Deployed |
 | PythPriceHook | `0x3d0f3EB4Bd1263a02BF70b2a6BcEaD21E7E654d2` | ✅ Deployed |
 | YellowStateChannel | `0x1Bd94cB5Eccb3968a229814c7CAe8B97795cE177` | ✅ Deployed |
@@ -61,7 +61,7 @@ forge script script/DeployMEVAuctionHook.s.sol \
 ```
 === MEVAuctionHook V4 Deployment ===
 Network: Sepolia Testnet
-PoolManager: 0x89169DeAE6C7E07A12De45B6198D4022e14527cC
+PoolManager: 0x000000000004444c5dc75cB358380D2e3dE08A90
 LitEncryption: 0x5eBD47dc03f512Afa54aB323B79060792aE56Ea7
 PythPriceHook: 0x3d0f3EB4Bd1263a02BF70b2a6BcEaD21E7E654d2
 

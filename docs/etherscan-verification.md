@@ -54,7 +54,7 @@ forge verify-contract \
   --rpc-url $SEPOLIA_RPC_URL \
   --etherscan-api-key $ETHERSCAN_API_KEY \
   --constructor-args $(cast abi-encode "constructor(address,address,address)" \
-    0x89169DeAE6C7E07A12De45B6198D4022e14527cC \
+    0x000000000004444c5dc75cB358380D2e3dE08A90 \
     0x5eBD47dc03f512Afa54aB323B79060792aE56Ea7 \
     0x3d0f3EB4Bd1263a02BF70b2a6BcEaD21E7E654d2)
 ```
@@ -72,7 +72,7 @@ forge verify-contract \
   --etherscan-api-key $ETHERSCAN_API_KEY \
   --skip-simulation \
   --constructor-args $(cast abi-encode "constructor(address,address,address)" \
-    0x89169DeAE6C7E07A12De45B6198D4022e14527cC \
+    0x000000000004444c5dc75cB358380D2e3dE08A90 \
     0x5eBD47dc03f512Afa54aB323B79060792aE56Ea7 \
     0x3d0f3EB4Bd1263a02BF70b2a6BcEaD21E7E654d2)
 ```
@@ -119,7 +119,7 @@ If automated verification fails, you can verify manually:
 
 ```bash
 cast abi-encode "constructor(address,address,address)" \
-  0x89169DeAE6C7E07A12De45B6198D4022e14527cC \
+  0x000000000004444c5dc75cB358380D2e3dE08A90 \
   0x5eBD47dc03f512Afa54aB323B79060792aE56Ea7 \
   0x3d0f3EB4Bd1263a02BF70b2a6BcEaD21E7E654d2
 ```
