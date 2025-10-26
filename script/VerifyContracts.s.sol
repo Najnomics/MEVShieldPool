@@ -14,10 +14,10 @@ contract VerifyContracts is Script {
     address constant LIT_ENCRYPTION_HOOK = 0x5eBD47dc03f512Afa54aB323B79060792aE56Ea7;
     address constant PYTH_PRICE_HOOK = 0x3d0f3EB4Bd1263a02BF70b2a6BcEaD21E7E654d2;
     address constant YELLOW_STATE_CHANNEL = 0x1Bd94cB5Eccb3968a229814c7CAe8B97795cE177;
-    address constant POOL_MANAGER = 0x000000000004444c5dc75cB358380D2e3dE08A90;
+    address constant POOL_MANAGER = 0xE03A1074c86CFeDd5C142C4F04F1a1536e203543;
     
     // Constructor arguments for MEVAuctionHook
-    address constant POOL_MANAGER_ARG = 0x000000000004444c5dc75cB358380D2e3dE08A90;
+    address constant POOL_MANAGER_ARG = 0xE03A1074c86CFeDd5C142C4F04F1a1536e203543;
     address constant LIT_ENCRYPTION_ARG = 0x5eBD47dc03f512Afa54aB323B79060792aE56Ea7;
     address constant PYTH_PRICE_HOOK_ARG = 0x3d0f3EB4Bd1263a02BF70b2a6BcEaD21E7E654d2;
     
@@ -37,7 +37,7 @@ contract VerifyContracts is Script {
         console.log("  --rpc-url $SEPOLIA_RPC_URL \\");
         console.log("  --etherscan-api-key $ETHERSCAN_API_KEY \\");
         console.log("  --constructor-args $(cast abi-encode \"constructor(address,address,address)\" \\");
-        console.log("    0x000000000004444c5dc75cB358380D2e3dE08A90 \\");
+        console.log("    0xE03A1074c86CFeDd5C142C4F04F1a1536e203543 \\");
         console.log("    0x5eBD47dc03f512Afa54aB323B79060792aE56Ea7 \\");
         console.log("    0x3d0f3EB4Bd1263a02BF70b2a6BcEaD21E7E654d2)");
         console.log("");
