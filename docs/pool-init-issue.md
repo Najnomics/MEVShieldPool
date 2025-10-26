@@ -7,7 +7,7 @@ Pool initialization fails with `HookNotImplemented()` error when trying to initi
 The hook declares `beforeInitialize: true` in permissions but the BaseHook implementation may not be properly handling the `beforeInitialize` call.
 
 ## Status
-- ✅ New hook deployed: `0x6e5D7D71E5e2AEeE0FE6CB88eb1c525A64AcAac0`
+- ✅ New hook deployed: `0xB511417B2D983e6A86dff5663A08d01462036aC0`
 - ✅ Using official Sepolia PoolManager: `0xE03A1074c86CFeDd5C142C4F04F1a1536e203543`
 - ✅ Test tokens deployed
 - ❌ Pool initialization failing

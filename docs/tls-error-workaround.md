@@ -18,7 +18,7 @@ This is a known issue with Foundry/Forge on macOS when there are:
 Your deployment **actually succeeded**! The error occurred during the broadcasting phase, but the hook was already deployed at:
 
 ```
-MEVAuctionHook: 0x44369EA8F59Ed1Df48f8eA14aB1a42Cc07f86aC0
+MEVAuctionHook: 0xB511417B2D983e6A86dff5663A08d01462036aC0
 ```
 
 The script output shows:
@@ -71,7 +71,7 @@ forge script script/DeployMEVAuctionHook.s.sol \
 
 # Verify later (if needed)
 forge verify-contract \
-  0x44369EA8F59Ed1Df48f8eA14aB1a42Cc07f86aC0 \
+  0xB511417B2D983e6A86dff5663A08d01462036aC0 \
   src/hooks/MEVAuctionHook.sol:MEVAuctionHook \
   --rpc-url $SEPOLIA_RPC_URL \
   --etherscan-api-key YOUR_KEY
@@ -101,10 +101,10 @@ Since your deployment succeeded, verify the contract is on-chain:
 
 ```bash
 # Check contract code exists
-cast code 0x44369EA8F59Ed1Df48f8eA14aB1a42Cc07f86aC0 --rpc-url $SEPOLIA_RPC_URL
+cast code 0xB511417B2D983e6A86dff5663A08d01462036aC0 --rpc-url $SEPOLIA_RPC_URL
 
 # Get contract info
-cast storage 0x44369EA8F59Ed1Df48f8eA14aB1a42Cc07f86aC0 \
+cast storage 0xB511417B2D983e6A86dff5663A08d01462036aC0 \
   0x0000000000000000000000000000000000000000000000000000000000000000 \
   --rpc-url $SEPOLIA_RPC_URL
 ```
@@ -124,7 +124,7 @@ The deployment still succeeds because:
 ## Your Deployment Status
 
 ✅ **MEVAuctionHook successfully deployed to Sepolia**  
-   Address: `0x44369EA8F59Ed1Df48f8eA14aB1a42Cc07f86aC0`  
+   Address: `0xB511417B2D983e6A86dff5663A08d01462036aC0`  
    Salt: `0x000000000000000000000000000000000000000000000000000000000000088c`
 
 You can now:

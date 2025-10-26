@@ -4,7 +4,7 @@
 The deployment script keeps hitting TLS/proxy errors, preventing successful deployment to Sepolia.
 
 ## Hook Address (from simulation)
-- **Target Address**: `0xe2f92333b52765AF0405C44a90e626FC683B6Ac0`
+- **Target Address**: `0xB511417B2D983e6A86dff5663A08d01462036aC0`
 - **Salt**: `0x00000000000000000000000000000000000000000000000000000000000062ae`
 - **Permissions**: beforeInitialize, beforeAddLiquidity, beforeRemoveLiquidity, beforeSwap, afterSwap
 
@@ -45,13 +45,13 @@ The script calculated these values:
 
 ### 1. Verify Contract Code
 ```bash
-cast code 0xe2f92333b52765AF0405C44a90e626FC683B6Ac0 \
+cast code 0xB511417B2D983e6A86dff5663A08d01462036aC0 \
   --rpc-url https://eth-sepolia.g.alchemy.com/v2/FlEUrYqZ9gYvgFxtEVA6zWB0zrQwGL4N
 ```
 
 ### 2. Verify PoolManager
 ```bash
-cast call 0xe2f92333b52765AF0405C44a90e626FC683B6Ac0 \
+cast call 0xB511417B2D983e6A86dff5663A08d01462036aC0 \
   "poolManager()(address)" \
   --rpc-url https://eth-sepolia.g.alchemy.com/v2/FlEUrYqZ9gYvgFxtEVA6zWB0zrQwGL4N
 ```
@@ -59,7 +59,7 @@ Should return: `0xE03A1074c86CFeDd5C142C4F04F1a1536e203543`
 
 ### 3. Verify Contract on Etherscan
 ```bash
-forge verify-contract 0xe2f92333b52765AF0405C44a90e626FC683B6Ac0 \
+forge verify-contract 0xB511417B2D983e6A86dff5663A08d01462036aC0 \
   src/hooks/MEVAuctionHook.sol:MEVAuctionHook \
   --constructor-args $(cast abi-encode "constructor(address,address,address)" \
     0xE03A1074c86CFeDd5C142C4F04F1a1536e203543 \
@@ -73,7 +73,7 @@ forge verify-contract 0xe2f92333b52765AF0405C44a90e626FC683B6Ac0 \
 ### 4. Update Configuration
 ```bash
 # Update .env
-sed -i.bak 's/MEV_AUCTION_HOOK=.*/MEV_AUCTION_HOOK=0xe2f92333b52765AF0405C44a90e626FC683B6Ac0/' .env
+sed -i.bak 's/MEV_AUCTION_HOOK=.*/MEV_AUCTION_HOOK=0xB511417B2D983e6A86dff5663A08d01462036aC0/' .env
 
 # Update InitializePoolWithTokens.s.sol (already done)
 ```
@@ -92,7 +92,7 @@ forge script script/InitializePoolWithTokens.s.sol:InitializePoolWithTokens \
 POOL_ID="0x$(printf '%064x' 34229472685399027887349370470681606596695199796966705095526113066254675628314)"
 BID_WEI=$(cast --to-wei 0.002 ether)
 
-cast send 0xe2f92333b52765AF0405C44a90e626FC683B6Ac0 \
+cast send 0xB511417B2D983e6A86dff5663A08d01462036aC0 \
   "submitBid(bytes32)" $POOL_ID \
   --value $BID_WEI \
   --private-key c4882a6c4f7eb92edd87abca6627ff65bb97e1d1ecba71c14bc56b1d87b88a14 \
@@ -102,7 +102,7 @@ cast send 0xe2f92333b52765AF0405C44a90e626FC683B6Ac0 \
 ## Summary
 - ✅ Code ready and correct
 - ✅ BaseHook fixed
-- ✅ Hook address calculated: `0xe2f92333b52765AF0405C44a90e626FC683B6Ac0`
+- ✅ Hook address calculated: `0xB511417B2D983e6A86dff5663A08d01462036aC0`
 - ⏳ Deployment blocked by TLS/proxy issues on macOS
 - ⏳ Need to deploy via alternative method or different machine
 

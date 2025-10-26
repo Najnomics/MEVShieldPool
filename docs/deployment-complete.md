@@ -7,7 +7,7 @@ All contracts have been successfully deployed to Sepolia testnet and submitted f
 ## Deployed Contracts
 
 ### 1. MEVAuctionHook (Main V4 Hook)
-- **Address**: `0x44369EA8F59Ed1Df48f8eA14aB1a42Cc07f86aC0`
+- **Address**: `0xB511417B2D983e6A86dff5663A08d01462036aC0`
 - **Type**: Uniswap V4 Hook (CREATE2 deployed)
 - **Permissions**: `beforeInitialize`, `beforeAddLiquidity`, `beforeRemoveLiquidity`, `beforeSwap`, `afterSwap`
 - **Verification**: ✅ Submitted
@@ -61,7 +61,7 @@ PoolKey memory key = PoolKey({
     currency1: Currency.wrap(address(token1)),
     fee: 3000,
     tickSpacing: 60,
-    hooks: IHooks(0x44369EA8F59Ed1Df48f8eA14aB1a42Cc07f86aC0)
+    hooks: IHooks(0xB511417B2D983e6A86dff5663A08d01462036aC0)
 });
 
 poolManager.initialize(key, sqrtPriceX96);
@@ -79,7 +79,7 @@ Update frontend configuration with deployed contract addresses from `.env` file.
 ## Environment Variables
 
 All addresses are stored in `.env`:
-- `MEV_AUCTION_HOOK=0x44369EA8F59Ed1Df48f8eA14aB1a42Cc07f86aC0`
+- `MEV_AUCTION_HOOK=0xB511417B2D983e6A86dff5663A08d01462036aC0`
 - `LIT_ENCRYPTION_HOOK=0x5eBD47dc03f512Afa54aB323B79060792aE56Ea7`
 - `PYTH_PRICE_HOOK=0x3d0f3EB4Bd1263a02BF70b2a6BcEaD21E7E654d2`
 - `YELLOW_STATE_CHANNEL=0x1Bd94cB5Eccb3968a229814c7CAe8B97795cE177`

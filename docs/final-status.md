@@ -20,7 +20,7 @@
 
 ## ⚠️ Deployment Issue
 
-The hook deployment via CREATE2 deployer succeeded (transaction: `0x41868722967a5b8684c176dee67994f0ee8667f0904e08e88c8777e0851949c4`), but the contract doesn't have code at the expected address `0xBA9D4C29C2cBc02dDD52419ff6b9530d136A2ac0`.
+The hook deployment via CREATE2 deployer succeeded (transaction: `0x41868722967a5b8684c176dee67994f0ee8667f0904e08e88c8777e0851949c4`), but the contract doesn't have code at the expected address `0xB511417B2D983e6A86dff5663A08d01462036aC0`.
 
 ### Possible Causes
 1. CREATE2 deployer proxy didn't emit deployment event

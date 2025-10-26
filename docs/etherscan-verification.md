@@ -48,7 +48,7 @@ For `MEVAuctionHook`:
 
 ```bash
 forge verify-contract \
-  0x44369EA8F59Ed1Df48f8eA14aB1a42Cc07f86aC0 \
+  0xB511417B2D983e6A86dff5663A08d01462036aC0 \
   src/hooks/MEVAuctionHook.sol:MEVAuctionHook \
   --chain-id 11155111 \
   --rpc-url $SEPOLIA_RPC_URL \
@@ -65,7 +65,7 @@ If you're still experiencing TLS errors, use `--skip-simulation`:
 
 ```bash
 forge verify-contract \
-  0x44369EA8F59Ed1Df48f8eA14aB1a42Cc07f86aC0 \
+  0xB511417B2D983e6A86dff5663A08d01462036aC0 \
   src/hooks/MEVAuctionHook.sol:MEVAuctionHook \
   --chain-id 11155111 \
   --rpc-url $SEPOLIA_RPC_URL \
@@ -90,7 +90,7 @@ import {Script} from "forge-std/Script";
 contract Verify is Script {
     function run() external {
         uint256 deployerPrivateKey = vm.envUint("PRIVATE_KEY");
-        address mevHook = 0x44369EA8F59Ed1Df48f8eA14aB1a42Cc07f86aC0;
+        address mevHook = 0xB511417B2D983e6A86dff5663A08d01462036aC0;
         
         vm.startBroadcast(deployerPrivateKey);
         
@@ -126,7 +126,7 @@ cast abi-encode "constructor(address,address,address)" \
 
 ### Step 2: Go to Etherscan
 
-1. Visit: https://sepolia.etherscan.io/address/0x44369EA8F59Ed1Df48f8eA14aB1a42Cc07f86aC0
+1. Visit: https://sepolia.etherscan.io/address/0xB511417B2D983e6A86dff5663A08d01462036aC0
 2. Click "Contract" tab
 3. Click "Verify and Publish"
 4. Select:
@@ -170,7 +170,7 @@ Once verified, you can:
 
 After verification, your contracts will be available at:
 
-- **MEVAuctionHook**: https://sepolia.etherscan.io/address/0x44369EA8F59Ed1Df48f8eA14aB1a42Cc07f86aC0#code
+- **MEVAuctionHook**: https://sepolia.etherscan.io/address/0xB511417B2D983e6A86dff5663A08d01462036aC0#code
 - **LitEncryptionHook**: https://sepolia.etherscan.io/address/0x5eBD47dc03f512Afa54aB323B79060792aE56Ea7#code
 - **PythPriceHook**: https://sepolia.etherscan.io/address/0x3d0f3EB4Bd1263a02BF70b2a6BcEaD21E7E654d2#code
 

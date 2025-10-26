@@ -6,7 +6,7 @@
 
 | Contract | Address | Status | Etherscan |
 |----------|---------|--------|-----------|
-| **MEVAuctionHook** | `0xe2f92333b52765AF0405C44a90e626FC683B6Ac0` | ✅ Deployed & Verified | [View](https://sepolia.etherscan.io/address/0xe2f92333b52765af0405c44a90e626fc683b6ac0) |
+| **MEVAuctionHook** | `0xB511417B2D983e6A86dff5663A08d01462036aC0` | ✅ Deployed & Verified | [View](https://sepolia.etherscan.io/address/0xe2f92333b52765af0405c44a90e626fc683b6ac0) |
 | **LitEncryptionHook** | `0x5eBD47dc03f512Afa54aB323B79060792aE56Ea7` | ✅ Deployed | [View](https://sepolia.etherscan.io/address/0x5ebd47dc03f512afa54ab323b79060792ae56ea7) |
 | **PythPriceHook** | `0x3d0f3EB4Bd1263a02BF70b2a6BcEaD21E7E654d2` | ✅ Deployed | [View](https://sepolia.etherscan.io/address/0x3d0f3eb4bd1263a02bf70b2a6bcead21e7e654d2) |
 | **YellowStateChannel** | `0x1Bd94cB5Eccb3968a229814c7CAe8B97795cE177` | ✅ Deployed | [View](https://sepolia.etherscan.io/address/0x1bd94cb5eccb3968a229814c7cae8b97795ce177) |
@@ -44,7 +44,7 @@
    ```bash
    POOL_ID="0x$(printf '%064x' 34229472685399027887349370470681606596695199796966705095526113066254675628314)"
    BID_WEI=$(cast --to-wei 0.002 ether)
-   cast send 0xe2f92333b52765AF0405C44a90e626FC683B6Ac0 \
+   cast send 0xB511417B2D983e6A86dff5663A08d01462036aC0 \
      "submitBid(bytes32)" $POOL_ID \
      --value $BID_WEI \
      --private-key $PRIVATE_KEY \
@@ -53,7 +53,7 @@
 
 2. **Verify Contract** (if verification is still pending):
    ```bash
-   forge verify-contract 0xe2f92333b52765AF0405C44a90e626FC683B6Ac0 \
+   forge verify-contract 0xB511417B2D983e6A86dff5663A08d01462036aC0 \
      src/hooks/MEVAuctionHook.sol:MEVAuctionHook \
      --constructor-args $(cast abi-encode "constructor(address,address,address)" \
        0xE03A1074c86CFeDd5C142C4F04F1a1536e203543 \

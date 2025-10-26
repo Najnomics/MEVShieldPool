@@ -4,7 +4,7 @@
 set -e
 
 RPC_URL="https://eth-sepolia.g.alchemy.com/v2/FlEUrYqZ9gYvgFxtEVA6zWB0zrQwGL4N"
-MEV_HOOK="0x6e5D7D71E5e2AEeE0FE6CB88eb1c525A64AcAac0"
+MEV_HOOK="0xB511417B2D983e6A86dff5663A08d01462036aC0"
 PRIVATE_KEY="c4882a6c4f7eb92edd87abca6627ff65bb97e1d1ecba71c14bc56b1d87b88a14"
 
 # Pool ID from initialization attempt

@@ -25,7 +25,7 @@ These are two different BaseHook implementations:
 
 ## Status
 ✅ Build successful
-✅ Local simulation successful (new hook address: `0xBA9D4C29C2cBc02dDD52419ff6b9530d136A2ac0`)
+✅ Local simulation successful (new hook address: `0xB511417B2D983e6A86dff5663A08d01462036aC0`)
 ⏳ Ready for Sepolia deployment
 
 ## Next Steps

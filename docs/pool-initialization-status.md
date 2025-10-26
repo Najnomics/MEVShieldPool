@@ -7,7 +7,7 @@
 - TokenB: `0x3932ED745f6e348CcE56621c4ff9Da47Afbf7945`
 
 ✅ **MEV Hook Deployed**
-- MEVAuctionHook: `0x44369EA8F59Ed1Df48f8eA14aB1a42Cc07f86aC0`
+- MEVAuctionHook: `0xB511417B2D983e6A86dff5663A08d01462036aC0`
 
 ⚠️ **PoolManager Issue**
 - The PoolManager addresses in the README don't have code deployed
@@ -37,7 +37,7 @@ Once a pool is initialized:
 POOL_ID="<pool_id_from_initialization>"
 
 # Submit a bid
-cast send 0x44369EA8F59Ed1Df48f8eA14aB1a42Cc07f86aC0 \
+cast send 0xB511417B2D983e6A86dff5663A08d01462036aC0 \
   "submitBid(bytes32)" $POOL_ID \
   --value 0.002ether \
   --rpc-url $SEPOLIA_RPC_URL \

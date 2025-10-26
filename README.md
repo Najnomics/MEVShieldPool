@@ -356,11 +356,12 @@ flowchart LR
 - YellowStateChannel: [Etherscan](https://sepolia.etherscan.io/address/0x1bd94cb5eccb3968a229814c7cae8b97795ce177)
 - PoolManager: [Etherscan](https://sepolia.etherscan.io/address/0xE03A1074c86CFeDd5C142C4F04F1a1536e203543) (Official Sepolia)
 
-**Initialized Pool:**
-- Pool ID: `34229472685399027887349370470681606596695199796966705095526113066254675628314`
-- Token Pair: TokenA / TokenB
-- Fee: 0.3% (3000)
-- Status: ✅ Active with MEV auction
+**Initialized Pools:**
+- **Pool 1**: `26282756708538069910862534158750760320053768499940364003422645886916113207248`
+  - Token Pair: TokenA / TokenB
+  - Fee: 0.3% (3000)
+  - Status: ✅ Active with 5-minute MEV auction
+  - Bid submitted: ✅ Success (TX: 0x7c2a924b7c72c090aabbe24a54890f6d351704a22a1893566b2f90a00da2b132)
 
 **Demo Video:** [🎬 Watch the Demo](https://youtu.be/your-demo-link)
 

@@ -4,7 +4,7 @@
 **MEVAuctionHook successfully deployed** using OpenZeppelin BaseHook!
 
 ### Deployment Details
-- **Hook Address**: `0xBA9D4C29C2cBc02dDD52419ff6b9530d136A2ac0`
+- **Hook Address**: `0xB511417B2D983e6A86dff5663A08d01462036aC0`
 - **Network**: Sepolia Testnet
 - **BaseHook**: OpenZeppelin uniswap-hooks implementation
 - **PoolManager**: `0xE03A1074c86CFeDd5C142C4F04F1a1536e203543`
@@ -17,7 +17,7 @@
 4. ✅ Fixed remappings to use correct library paths
 
 ### Next Steps
-1. Verify hook deployment: `cast code 0xBA9D4C29C2cBc02dDD52419ff6b9530d136A2ac0 --rpc-url $RPC_URL`
+1. Verify hook deployment: `cast code 0xB511417B2D983e6A86dff5663A08d01462036aC0 --rpc-url $RPC_URL`
 2. Initialize pool with the hook
 3. Submit MEV auction bid using cast
 

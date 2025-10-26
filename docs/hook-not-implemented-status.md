@@ -17,7 +17,7 @@ The `HookNotImplemented()` error suggests that BaseHook's internal validation me
 3. **Version mismatch**: There may be a mismatch between BaseHook version and our implementation
 
 ## Current Status
-- ✅ Hook deployed at: `0xD3839BaA9fF7D533aBCfc204a968f9F47E0DaaC0`
+- ✅ Hook deployed at: `0xB511417B2D983e6A86dff5663A08d01462036aC0`
 - ✅ Permissions correctly set
 - ✅ Hook functions implemented
 - ❌ Pool initialization still failing with `HookNotImplemented()`

@@ -7,7 +7,7 @@ Foundry is crashing with "Attempted to create a NULL object" error when trying t
 Deploy manually using cast or by running forge on a different machine.
 
 ## Hook Address (from simulation)
-The new hook will be deployed at: `0xBA9D4C29C2cBc02dDD52419ff6b9530d136A2ac0`
+The new hook will be deployed at: `0xB511417B2D983e6A86dff5663A08d01462036aC0`
 
 ## Manual Deployment Steps
 

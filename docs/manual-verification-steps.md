@@ -6,7 +6,7 @@ Since automated verification is experiencing TLS issues, follow these manual ste
 
 ### Step 1: Visit Contract on Etherscan
 
-Go to: https://sepolia.etherscan.io/address/0x44369EA8F59Ed1Df48f8eA14aB1a42Cc07f86aC0
+Go to: https://sepolia.etherscan.io/address/0xB511417B2D983e6A86dff5663A08d01462036aC0
 
 ### Step 2: Click "Verify and Publish"
 
@@ -89,7 +89,7 @@ Then upload the flattened file as a single source code block.
 ## Post-Verification
 
 Once verified, your contract will be at:
-https://sepolia.etherscan.io/address/0x44369EA8F59Ed1Df48f8eA14aB1a42Cc07f86aC0#code
+https://sepolia.etherscan.io/address/0xB511417B2D983e6A86dff5663A08d01462036aC0#code
 
 You can then:
 - View full source code
