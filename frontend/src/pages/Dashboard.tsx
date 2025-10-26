@@ -23,12 +23,12 @@ const Dashboard: React.FC = () => {
   if (!isConnected) {
     return (
       <div className="min-h-96 flex items-center justify-center">
-        <div className="text-center">
-          <ShieldCheckIcon className="mx-auto h-12 w-12 text-gray-400" />
-          <h3 className="mt-2 text-sm font-medium text-gray-900 dark:text-gray-100">
+        <div className="text-center backdrop-blur-xl bg-gradient-to-br from-gray-800/40 to-gray-900/40 border border-gray-700/30 rounded-2xl p-8 shadow-2xl">
+          <ShieldCheckIcon className="mx-auto h-16 w-16 text-gray-400 mb-4" />
+          <h3 className="text-xl font-bold text-white mb-2">
             Connect Wallet
           </h3>
-          <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+          <p className="text-gray-300">
             Connect your wallet to view MEV auction dashboard.
           </p>
         </div>
