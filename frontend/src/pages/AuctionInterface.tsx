@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
-import { useWeb3 } from '../contexts/Web3Context';
+import React, { useState, useEffect } from 'react';
+import { useAccount } from 'wagmi';
+import { useMEVAuction, useAuction } from '../hooks/useMEVAuction';
 import { parseEther, formatEther } from 'viem';
 import { 
   CurrencyDollarIcon, 
@@ -9,30 +10,38 @@ import {
   EyeIcon
 } from '@heroicons/react/24/outline';
 import LoadingSpinner from '../components/LoadingSpinner';
+import { KNOWN_POOLS } from '../config/contracts';
+import { toast } from 'react-toastify';
 
 const AuctionInterface: React.FC = () => {
-  const { 
-    submitBid, 
-    activeAuctions, 
-    isSubmittingBid, 
-    isConnected,
-    refreshData 
-  } = useWeb3();
-
+  const { address, isConnected } = useAccount();
+  const { submitBid, minBid, isSubmitting, isSuccess, hash } = useMEVAuction();
   const [bidAmount, setBidAmount] = useState('');
-  const [selectedAuction, setSelectedAuction] = useState<string>('');
-  const [encryptBid, setEncryptBid] = useState(true);
+  const [selectedPoolId, setSelectedPoolId] = useState<string>('');
+  const [encryptBid, setEncryptBid] = useState(false);
+
+  // Convert known pool ID to hex format
+  const poolIdHex = selectedPoolId ? `0x${BigInt(selectedPoolId).toString(16).padStart(64, '0')}` as `0x${string}` : undefined;
+  const { data: auctionData } = useAuction(poolIdHex || '0x0' as `0x${string}`);
+
+  useEffect(() => {
+    if (isSuccess && hash) {
+      toast.success('Bid submitted successfully!');
+      setBidAmount('');
+    }
+  }, [isSuccess, hash]);
 
   const handleSubmitBid = async () => {
-    if (!selectedAuction || !bidAmount) return;
+    if (!selectedPoolId || !bidAmount || !poolIdHex) {
+      toast.error('Please select a pool and enter bid amount');
+      return;
+    }
     
     try {
-      await submitBid(selectedAuction, parseEther(bidAmount), encryptBid);
-      setBidAmount('');
-      setSelectedAuction('');
-      await refreshData();
-    } catch (error) {
+      await submitBid(poolIdHex, bidAmount);
+    } catch (error: any) {
       console.error('Error submitting bid:', error);
+      toast.error(error?.message || 'Failed to submit bid');
     }
   };
 
@@ -52,6 +61,10 @@ const AuctionInterface: React.FC = () => {
     );
   }
 
+  const auction = auctionData as any;
+  const isAuctionActive = auction?.isActive || false;
+  const timeRemaining = auction?.deadline ? Math.max(0, Number(auction.deadline) - Math.floor(Date.now() / 1000)) : 0;
+
   return (
     <div className="space-y-8">
       {/* Header */}
@@ -60,7 +73,7 @@ const AuctionInterface: React.FC = () => {
           MEV Auction Interface
         </h1>
         <p className="mt-2 text-gray-300 font-medium">
-          Submit encrypted bids and participate in MEV auctions with advanced privacy protection
+          Submit bids and participate in MEV auctions with advanced privacy protection
         </p>
       </div>
 
@@ -77,23 +90,31 @@ const AuctionInterface: React.FC = () => {
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {/* Auction Selection */}
+            {/* Pool Selection */}
             <div className="space-y-4">
               <label className="block text-sm font-bold text-cyan-200">
-                Select Auction
+                Select Pool
               </label>
               <select
-                value={selectedAuction}
-                onChange={(e) => setSelectedAuction(e.target.value)}
+                value={selectedPoolId}
+                onChange={(e) => setSelectedPoolId(e.target.value)}
                 className="w-full px-4 py-3 bg-white/10 backdrop-blur-sm border border-white/20 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-cyan-400/50 focus:border-cyan-400/50 transition-all duration-200"
               >
-                <option value="" className="bg-gray-800 text-white">Choose auction...</option>
-                {activeAuctions.map((auction) => (
-                  <option key={auction.auctionId} value={auction.poolId} className="bg-gray-800 text-white">
-                    Pool: {auction.poolId.slice(0, 8)}... - Current: {formatEther(auction.highestBid)} ETH
+                <option value="" className="bg-gray-800 text-white">Choose pool...</option>
+                {KNOWN_POOLS.map((pool) => (
+                  <option key={pool.poolId} value={pool.poolId} className="bg-gray-800 text-white">
+                    Pool: {pool.poolId.slice(0, 8)}... - {pool.token0.slice(0, 6)}/{pool.token1.slice(0, 6)}
                   </option>
                 ))}
               </select>
+              {auction && (
+                <div className="mt-2 text-sm text-cyan-200">
+                  Status: {isAuctionActive ? '✅ Active' : '❌ Inactive'}
+                  {auction.highestBid && (
+                    <div>Current Bid: {formatEther(auction.highestBid)} ETH</div>
+                  )}
+                </div>
+              )}
             </div>
 
             {/* Bid Amount */}
@@ -104,9 +125,10 @@ const AuctionInterface: React.FC = () => {
               <input
                 type="number"
                 step="0.001"
+                min={minBid}
                 value={bidAmount}
                 onChange={(e) => setBidAmount(e.target.value)}
-                placeholder="Enter bid amount"
+                placeholder={`Min: ${minBid} ETH`}
                 className="w-full px-4 py-3 bg-white/10 backdrop-blur-sm border border-white/20 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-cyan-400/50 focus:border-cyan-400/50 transition-all duration-200"
               />
             </div>
@@ -129,10 +151,10 @@ const AuctionInterface: React.FC = () => {
 
             <button
               onClick={handleSubmitBid}
-              disabled={!selectedAuction || !bidAmount || isSubmittingBid}
+              disabled={!selectedPoolId || !bidAmount || isSubmitting || !isAuctionActive}
               className="w-full px-6 py-4 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 disabled:from-gray-600 disabled:to-gray-700 text-white font-bold rounded-xl shadow-lg shadow-cyan-500/25 hover:shadow-cyan-500/40 transition-all duration-200 disabled:cursor-not-allowed"
             >
-              {isSubmittingBid ? (
+              {isSubmitting ? (
                 <div className="flex items-center justify-center space-x-2">
                   <LoadingSpinner size="small" />
                   <span>Submitting Bid...</span>
@@ -141,6 +163,11 @@ const AuctionInterface: React.FC = () => {
                 'Submit Bid'
               )}
             </button>
+            {hash && (
+              <div className="text-sm text-green-300 text-center">
+                Transaction: {hash.slice(0, 10)}...{hash.slice(-8)}
+              </div>
+            )}
           </div>
         </div>
       </div>
@@ -150,7 +177,7 @@ const AuctionInterface: React.FC = () => {
         <div className="p-6">
           <div className="flex items-center justify-between mb-6">
             <h3 className="text-xl font-bold bg-gradient-to-r from-white to-gray-300 bg-clip-text text-transparent">
-              Active Auctions
+              Known Pools
             </h3>
             <div className="p-3 rounded-xl bg-gray-500/20 border border-gray-400/30 backdrop-blur-sm">
               <EyeIcon className="h-6 w-6 text-gray-300" />
@@ -158,55 +185,53 @@ const AuctionInterface: React.FC = () => {
           </div>
 
           <div className="space-y-4">
-            {activeAuctions.length === 0 ? (
-              <div className="text-center py-12">
-                <CurrencyDollarIcon className="mx-auto h-16 w-16 text-gray-500 mb-4" />
-                <p className="text-gray-400 font-medium text-lg">
-                  No active auctions at the moment
-                </p>
-                <p className="text-gray-500 mt-2">
-                  New auctions will appear here when MEV opportunities are detected
-                </p>
-              </div>
-            ) : (
-              activeAuctions.map((auction) => (
+            {KNOWN_POOLS.map((pool) => {
+              const poolHex = `0x${BigInt(pool.poolId).toString(16).padStart(64, '0')}` as `0x${string}`;
+              const { data: poolAuction } = useAuction(poolHex);
+              const poolAuctionData = poolAuction as any;
+              
+              return (
                 <div 
-                  key={auction.auctionId}
+                  key={pool.poolId}
                   className="p-6 bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl hover:bg-white/10 transition-all duration-200"
                 >
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div>
                       <p className="text-sm text-gray-400 mb-1">Pool ID</p>
-                      <p className="text-white font-bold">{auction.poolId.slice(0, 16)}...</p>
+                      <p className="text-white font-bold">{pool.poolId.slice(0, 16)}...</p>
                     </div>
-                    <div>
-                      <p className="text-sm text-gray-400 mb-1">Highest Bid</p>
-                      <p className="text-cyan-300 font-bold text-lg">
-                        {formatEther(auction.highestBid)} ETH
-                      </p>
-                    </div>
-                    <div>
-                      <p className="text-sm text-gray-400 mb-1">Time Remaining</p>
-                      <div className="flex items-center space-x-2">
-                        <ClockIcon className="h-4 w-4 text-orange-400" />
-                        <p className="text-orange-300 font-bold">
-                          {Math.max(0, Math.floor((auction.deadline * 1000 - Date.now()) / 60000))} min
-                        </p>
-                      </div>
-                    </div>
+                    {poolAuctionData && (
+                      <>
+                        <div>
+                          <p className="text-sm text-gray-400 mb-1">Highest Bid</p>
+                          <p className="text-cyan-300 font-bold text-lg">
+                            {formatEther(poolAuctionData.highestBid || 0n)} ETH
+                          </p>
+                        </div>
+                        <div>
+                          <p className="text-sm text-gray-400 mb-1">Time Remaining</p>
+                          <div className="flex items-center space-x-2">
+                            <ClockIcon className="h-4 w-4 text-orange-400" />
+                            <p className="text-orange-300 font-bold">
+                              {poolAuctionData.deadline ? Math.max(0, Math.floor((Number(poolAuctionData.deadline) - Date.now() / 1000) / 60)) : 0} min
+                            </p>
+                          </div>
+                        </div>
+                      </>
+                    )}
                   </div>
                   
-                  {auction.highestBidder !== '0x0000000000000000000000000000000000000000' && (
+                  {poolAuctionData?.highestBidder && poolAuctionData.highestBidder !== '0x0000000000000000000000000000000000000000' && (
                     <div className="mt-4 pt-4 border-t border-gray-700/50">
                       <p className="text-sm text-gray-400">Leading Bidder</p>
                       <p className="text-white font-mono text-sm">
-                        {auction.highestBidder.slice(0, 8)}...{auction.highestBidder.slice(-6)}
+                        {poolAuctionData.highestBidder.slice(0, 8)}...{poolAuctionData.highestBidder.slice(-6)}
                       </p>
                     </div>
                   )}
                 </div>
-              ))
-            )}
+              );
+            })}
           </div>
         </div>
       </div>

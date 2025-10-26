@@ -1,6 +1,12 @@
 import React, { useState } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { ConnectButton } from '@rainbow-me/rainbowkit';
 import './styles/globals.css';
+import Dashboard from './pages/Dashboard';
+import AuctionInterface from './pages/AuctionInterface';
+import PoolManagement from './pages/PoolManagement';
+import AnalyticsPage from './pages/AnalyticsPage';
+import Settings from './pages/Settings';
 
 const App: React.FC = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -40,9 +46,7 @@ const App: React.FC = () => {
                 </div>
 
                 <div className="flex items-center space-x-4">
-                  <button className="px-4 py-2 bg-gradient-to-r from-blue-500 to-purple-600 rounded-xl text-white font-medium hover:from-blue-600 hover:to-purple-700 transition-all duration-200">
-                    Connect Wallet
-                  </button>
+                  <ConnectButton />
                 </div>
               </div>
             </div>
@@ -93,11 +97,11 @@ const App: React.FC = () => {
               <div className="px-6 py-8 sm:px-8 lg:px-12">
                 <Routes>
                   <Route path="/" element={<Navigate to="/dashboard" replace />} />
-                  <Route path="/dashboard" element={<DashboardPage />} />
-                  <Route path="/auction" element={<div className="text-white">Auction Interface</div>} />
-                  <Route path="/analytics" element={<div className="text-white">Analytics Page</div>} />
-                  <Route path="/pools" element={<div className="text-white">Pool Management</div>} />
-                  <Route path="/settings" element={<div className="text-white">Settings</div>} />
+                  <Route path="/dashboard" element={<Dashboard />} />
+                  <Route path="/auction" element={<AuctionInterface />} />
+                  <Route path="/analytics" element={<AnalyticsPage />} />
+                  <Route path="/pools" element={<PoolManagement />} />
+                  <Route path="/settings" element={<Settings />} />
                 </Routes>
               </div>
             </main>
@@ -105,89 +109,6 @@ const App: React.FC = () => {
         </div>
       </div>
     </Router>
-  );
-};
-
-const DashboardPage: React.FC = () => {
-  return (
-    <div className="space-y-8">
-      {/* Header */}
-      <div className="backdrop-blur-sm bg-gradient-to-r from-gray-800/30 to-gray-900/30 border border-gray-700/30 rounded-2xl p-6 shadow-xl">
-        <h1 className="text-3xl font-bold bg-gradient-to-r from-white via-cyan-200 to-blue-300 bg-clip-text text-transparent">
-          MEV Dashboard
-        </h1>
-        <p className="mt-2 text-gray-300 font-medium">
-          Real-time MEV protection and auction analytics with advanced glassmorphism design
-        </p>
-      </div>
-
-      {/* Stats Grid */}
-      <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
-        {[
-          { name: 'Total MEV Prevented', value: '1,234.56', unit: 'ETH', color: 'from-emerald-500/20 to-green-500/20', border: 'border-emerald-400/30' },
-          { name: 'Active Auctions', value: '12', unit: 'auctions', color: 'from-cyan-500/20 to-blue-500/20', border: 'border-cyan-400/30' },
-          { name: 'Active Pools', value: '8', unit: 'pools', color: 'from-purple-500/20 to-violet-500/20', border: 'border-purple-400/30' },
-          { name: 'Avg Response Time', value: '12', unit: 'ms', color: 'from-orange-500/20 to-amber-500/20', border: 'border-orange-400/30' },
-        ].map((stat) => (
-          <div
-            key={stat.name}
-            className={`backdrop-blur-xl bg-gradient-to-br ${stat.color} border ${stat.border} rounded-2xl overflow-hidden shadow-2xl hover:shadow-3xl hover:scale-105 transition-all duration-300`}
-          >
-            <div className="p-6">
-              <div className="flex items-center justify-between">
-                <div className="flex-shrink-0">
-                  <div className="p-4 rounded-2xl bg-white/10 backdrop-blur-sm border border-white/20 shadow-lg">
-                    <div className="h-8 w-8 bg-white/20 rounded-lg"></div>
-                  </div>
-                </div>
-                <div className="text-right">
-                  <div className="text-3xl font-bold text-white">
-                    {stat.value}
-                  </div>
-                  <div className="text-sm font-medium text-cyan-300">
-                    {stat.unit}
-                  </div>
-                </div>
-              </div>
-              <div className="mt-4">
-                <p className="text-sm font-medium text-gray-300 truncate">
-                  {stat.name}
-                </p>
-              </div>
-            </div>
-          </div>
-        ))}
-      </div>
-
-      {/* Activity Panels */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        <div className="backdrop-blur-xl bg-gradient-to-br from-cyan-800/40 to-blue-900/40 border border-cyan-700/30 rounded-2xl shadow-2xl shadow-cyan-500/10">
-          <div className="p-6">
-            <h3 className="text-xl font-bold bg-gradient-to-r from-cyan-300 to-blue-300 bg-clip-text text-transparent mb-6">
-              Active Auctions
-            </h3>
-            <div className="text-center py-8">
-              <div className="text-gray-400 font-medium">
-                No active auctions at the moment
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div className="backdrop-blur-xl bg-gradient-to-br from-purple-800/40 to-violet-900/40 border border-purple-700/30 rounded-2xl shadow-2xl shadow-purple-500/10">
-          <div className="p-6">
-            <h3 className="text-xl font-bold bg-gradient-to-r from-purple-300 to-violet-300 bg-clip-text text-transparent mb-6">
-              Top Performing Pools
-            </h3>
-            <div className="text-center py-8">
-              <div className="text-gray-400 font-medium">
-                No pool data available
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
   );
 };
 
