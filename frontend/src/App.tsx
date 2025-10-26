@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate, Link, useLocation } from 'react-router-dom';
 import { ConnectButton } from '@rainbow-me/rainbowkit';
 import './styles/globals.css';
 import Dashboard from './pages/Dashboard';
@@ -7,6 +7,56 @@ import AuctionInterface from './pages/AuctionInterface';
 import PoolManagement from './pages/PoolManagement';
 import AnalyticsPage from './pages/AnalyticsPage';
 import Settings from './pages/Settings';
+
+const SidebarNav: React.FC<{ sidebarOpen: boolean; setSidebarOpen: (open: boolean) => void }> = ({ sidebarOpen, setSidebarOpen }) => {
+  const location = useLocation();
+  
+  const navItems = [
+    { path: '/dashboard', icon: '📊', label: 'Dashboard' },
+    { path: '/auction', icon: '💰', label: 'MEV Auctions' },
+    { path: '/pools', icon: '🧪', label: 'Pool Management' },
+    { path: '/analytics', icon: '📈', label: 'Analytics' },
+    { path: '/settings', icon: '⚙️', label: 'Settings' },
+  ];
+
+  return (
+    <div className={`fixed inset-y-0 left-0 z-50 w-64 bg-gray-900/60 backdrop-blur-xl border-r border-gray-700/50 shadow-2xl transform transition-transform duration-300 ease-in-out lg:translate-x-0 lg:static lg:inset-0 ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}>
+      <div className="flex flex-col h-full">
+        <div className="flex items-center justify-between h-16 px-6 border-b border-gray-700/50">
+          <div className="flex items-center">
+            <div className="h-8 w-8 bg-gradient-to-br from-cyan-400 via-blue-500 to-purple-600 rounded-xl flex items-center justify-center shadow-lg shadow-blue-500/25">
+              <span className="text-white font-bold text-sm">M</span>
+            </div>
+            <span className="ml-3 text-lg font-bold bg-gradient-to-r from-white to-gray-300 bg-clip-text text-transparent">
+              MEVShield
+            </span>
+          </div>
+        </div>
+
+        <nav className="flex-1 px-4 py-6 space-y-2">
+          {navItems.map((item) => {
+            const isActive = location.pathname === item.path;
+            return (
+              <Link
+                key={item.path}
+                to={item.path}
+                onClick={() => setSidebarOpen(false)}
+                className={`group flex items-center px-4 py-3 text-sm font-medium rounded-xl transition-all duration-300 ${
+                  isActive
+                    ? 'bg-gradient-to-r from-blue-500/20 to-purple-500/20 border border-blue-400/30 backdrop-blur-sm text-blue-200 shadow-lg shadow-blue-500/10'
+                    : 'text-gray-300 hover:bg-white/10 hover:border hover:border-white/20 hover:backdrop-blur-sm hover:text-white'
+                }`}
+              >
+                <span className="mr-3">{item.icon}</span>
+                <span className="flex-1">{item.label}</span>
+              </Link>
+            );
+          })}
+        </nav>
+      </div>
+    </div>
+  );
+};
 
 const App: React.FC = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -54,43 +104,7 @@ const App: React.FC = () => {
 
           <div className="flex">
             {/* Sidebar */}
-            <div className={`fixed inset-y-0 left-0 z-50 w-64 bg-gray-900/60 backdrop-blur-xl border-r border-gray-700/50 shadow-2xl transform transition-transform duration-300 ease-in-out lg:translate-x-0 lg:static lg:inset-0 ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}>
-              <div className="flex flex-col h-full">
-                <div className="flex items-center justify-between h-16 px-6 border-b border-gray-700/50">
-                  <div className="flex items-center">
-                    <div className="h-8 w-8 bg-gradient-to-br from-cyan-400 via-blue-500 to-purple-600 rounded-xl flex items-center justify-center shadow-lg shadow-blue-500/25">
-                      <span className="text-white font-bold text-sm">M</span>
-                    </div>
-                    <span className="ml-3 text-lg font-bold bg-gradient-to-r from-white to-gray-300 bg-clip-text text-transparent">
-                      MEVShield
-                    </span>
-                  </div>
-                </div>
-
-                <nav className="flex-1 px-4 py-6 space-y-2">
-                  <a href="/dashboard" className="group flex items-center px-4 py-3 text-sm font-medium rounded-xl bg-gradient-to-r from-blue-500/20 to-purple-500/20 border border-blue-400/30 backdrop-blur-sm text-blue-200 shadow-lg shadow-blue-500/10">
-                    <span className="mr-3">📊</span>
-                    <span className="flex-1">Dashboard</span>
-                  </a>
-                  <a href="/auction" className="group flex items-center px-4 py-3 text-sm font-medium rounded-xl text-gray-300 hover:bg-white/10 hover:border hover:border-white/20 hover:backdrop-blur-sm hover:text-white transition-all duration-300">
-                    <span className="mr-3">💰</span>
-                    <span className="flex-1">MEV Auctions</span>
-                  </a>
-                  <a href="/pools" className="group flex items-center px-4 py-3 text-sm font-medium rounded-xl text-gray-300 hover:bg-white/10 hover:border hover:border-white/20 hover:backdrop-blur-sm hover:text-white transition-all duration-300">
-                    <span className="mr-3">🧪</span>
-                    <span className="flex-1">Pool Management</span>
-                  </a>
-                  <a href="/analytics" className="group flex items-center px-4 py-3 text-sm font-medium rounded-xl text-gray-300 hover:bg-white/10 hover:border hover:border-white/20 hover:backdrop-blur-sm hover:text-white transition-all duration-300">
-                    <span className="mr-3">📈</span>
-                    <span className="flex-1">Analytics</span>
-                  </a>
-                  <a href="/settings" className="group flex items-center px-4 py-3 text-sm font-medium rounded-xl text-gray-300 hover:bg-white/10 hover:border hover:border-white/20 hover:backdrop-blur-sm hover:text-white transition-all duration-300">
-                    <span className="mr-3">⚙️</span>
-                    <span className="flex-1">Settings</span>
-                  </a>
-                </nav>
-              </div>
-            </div>
+            <SidebarNav sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />
 
             {/* Main Content */}
             <main className={`flex-1 transition-all duration-300 ${sidebarOpen ? 'ml-64' : 'ml-0'} lg:ml-64 min-h-screen`}>
