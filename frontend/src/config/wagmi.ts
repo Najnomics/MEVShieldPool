@@ -33,7 +33,8 @@ export const config = getDefaultConfig({
   transports: {
     [sepolia.id]: http(rpcUrl, {
       batch: {
-        multicall: true,
+        batchSize: 10,
+        wait: 100,
       },
       retryCount: 3,
       retryDelay: 1000,
