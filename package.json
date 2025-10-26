@@ -5,9 +5,9 @@
   "scripts": {
     "build": "forge build",
     "test": "forge test",
-    "deploy": "forge script script/Deploy.s.sol --broadcast",
-    "deploy:local": "forge script script/Deploy.s.sol --rpc-url http://localhost:8545 --broadcast",
-    "deploy:sepolia": "forge script script/Deploy.s.sol --rpc-url $SEPOLIA_RPC_URL --broadcast --verify",
+    "deploy": "forge script script/DeployMEVAuctionHook.s.sol --broadcast && forge script script/DeploySupportingContracts.s.sol --broadcast",
+    "deploy:local": "forge script script/DeployMEVAuctionHook.s.sol --rpc-url http://localhost:8545 --broadcast && forge script script/DeploySupportingContracts.s.sol --rpc-url http://localhost:8545 --broadcast",
+    "deploy:sepolia": "forge script script/DeployMEVAuctionHook.s.sol --rpc-url $SEPOLIA_RPC_URL --broadcast && forge script script/DeploySupportingContracts.s.sol --rpc-url $SEPOLIA_RPC_URL --broadcast --verify",
     "lint": "forge fmt --check",
     "format": "forge fmt",
     "coverage": "forge coverage",

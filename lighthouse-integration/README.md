@@ -151,7 +151,8 @@ Marketplace Listing → Subscription Purchase → Data Access → Revenue Distri
 ### Smart Contract Deployment
 ```bash
 # Deploy MEVDataRegistry contract
-forge script script/Deploy.s.sol --rpc-url $RPC_URL --private-key $PRIVATE_KEY --broadcast --verify
+forge script script/DeployMEVAuctionHook.s.sol --rpc-url $RPC_URL --private-key $PRIVATE_KEY --broadcast && \
+forge script script/DeploySupportingContracts.s.sol --rpc-url $RPC_URL --private-key $PRIVATE_KEY --broadcast --verify
 ```
 
 ### Application Deployment

@@ -33,7 +33,8 @@ forge build
 ### Deploy
 
 ```
-forge script script/Deploy.s.sol \
+forge script script/DeployMEVAuctionHook.s.sol --rpc-url $SEPOLIA_RPC_URL --private-key $PRIVATE_KEY --broadcast && \
+forge script script/DeploySupportingContracts.s.sol \
   --rpc-url $SEPOLIA_RPC_URL \
   --broadcast \
   --sig "run()"
