@@ -19,6 +19,7 @@ contract DeployMEVAuctionHook is Script {
     address constant CREATE2_DEPLOYER = 0x4e59b44847b379578588920cA78FbF26c0B4956C;
     
     // Already deployed contracts on Sepolia
+    // Official Sepolia Uniswap V4 PoolManager
     address constant POOL_MANAGER = 0xE03A1074c86CFeDd5C142C4F04F1a1536e203543;
     address constant LIT_ENCRYPTION = 0x5eBD47dc03f512Afa54aB323B79060792aE56Ea7;
     address constant PYTH_PRICE_HOOK = 0x3d0f3EB4Bd1263a02BF70b2a6BcEaD21E7E654d2;
