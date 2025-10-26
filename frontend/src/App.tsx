@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate, Link, useLocation } from 'react-router-dom';
-import { ConnectButton } from '@rainbow-me/rainbowkit';
+import RainbowKitCustomConnectButton from './components/RainbowKitCustomConnectButton';
 import './styles/globals.css';
 import Dashboard from './pages/Dashboard';
 import AuctionInterface from './pages/AuctionInterface';
@@ -96,7 +96,7 @@ const App: React.FC = () => {
                 </div>
 
                 <div className="flex items-center space-x-4">
-                  <ConnectButton />
+                  <RainbowKitCustomConnectButton />
                 </div>
               </div>
             </div>
