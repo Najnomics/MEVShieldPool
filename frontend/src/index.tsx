@@ -2,7 +2,7 @@ import React from 'react';
 import ReactDOM from 'react-dom/client';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { WagmiProvider } from 'wagmi';
-import { RainbowKitProvider, darkTheme } from '@rainbow-me/rainbowkit';
+import { RainbowKitProvider, darkTheme, ConnectButton } from '@rainbow-me/rainbowkit';
 import { ToastContainer } from 'react-toastify';
 import '@rainbow-me/rainbowkit/styles.css';
 import 'react-toastify/dist/ReactToastify.css';
@@ -42,6 +42,7 @@ root.render(
             overlayBlur: 'small',
           })}
           showRecentTransactions={true}
+          modalSize="compact"
         >
           <Web3Provider>
             <App />
