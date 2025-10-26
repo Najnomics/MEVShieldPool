@@ -350,10 +350,17 @@ flowchart LR
 ## 🎥 Demo & Live Deployment
 
 **Sepolia Testnet (Live):**
-- MEVAuctionHook: [Etherscan](https://sepolia.etherscan.io/address/0x44369ea8f59ed1df48f8ea14ab1a42cc07f86ac0)
+- MEVAuctionHook: [Etherscan](https://sepolia.etherscan.io/address/0xe2f92333b52765af0405c44a90e626fc683b6ac0) ✅ Verified
 - LitEncryptionHook: [Etherscan](https://sepolia.etherscan.io/address/0x5ebd47dc03f512afa54ab323b79060792ae56ea7)
 - PythPriceHook: [Etherscan](https://sepolia.etherscan.io/address/0x3d0f3eb4bd1263a02bf70b2a6bcead21e7e654d2)
 - YellowStateChannel: [Etherscan](https://sepolia.etherscan.io/address/0x1bd94cb5eccb3968a229814c7cae8b97795ce177)
+- PoolManager: [Etherscan](https://sepolia.etherscan.io/address/0xE03A1074c86CFeDd5C142C4F04F1a1536e203543) (Official Sepolia)
+
+**Initialized Pool:**
+- Pool ID: `34229472685399027887349370470681606596695199796966705095526113066254675628314`
+- Token Pair: TokenA / TokenB
+- Fee: 0.3% (3000)
+- Status: ✅ Active with MEV auction
 
 **Demo Video:** [🎬 Watch the Demo](https://youtu.be/your-demo-link)
 
@@ -395,6 +402,8 @@ Key test files:
 - [x] Yellow state channels + ECDSA verification
 - [x] Standardized hook events for indexing
 - [x] **Sepolia testnet deployment** (all contracts deployed and verified)
+- [x] **Pool initialized** with MEV auction active
+- [x] **Contract verification** on Etherscan
 - [ ] End-to-end UI polish
 
 ### Phase 2 - Post-Hackathon
