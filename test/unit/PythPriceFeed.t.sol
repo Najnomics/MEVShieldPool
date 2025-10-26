@@ -60,7 +60,7 @@ contract PythPriceFeedTest is Test {
         pythHook = new PythPriceHook(address(mockPyth));
         
         // Initialize with base ETH price and acceptable confidence for validation
-        _updateMockPrice(ETH_USD_FEED_ID, BASE_ETH_PRICE, 5000000); // $0.05
+        _updateMockPrice(ETH_USD_FEED_ID, BASE_ETH_PRICE, BASE_CONFIDENCE); // Use base confidence
     }
 
     /**
@@ -96,7 +96,7 @@ contract PythPriceFeedTest is Test {
         uint64 newConfidence = 5000000; // $0.05 USD confidence
         
         // Update price directly on mock (hook emits events only via updatePriceFeeds)
-        vm.prank(priceManager);
+        // Remove prank to avoid overwrite issues
         _updateMockPrice(ETH_USD_FEED_ID, newPrice, newConfidence);
         
         // Verify price was updated
@@ -118,8 +118,9 @@ contract PythPriceFeedTest is Test {
         
         // Manually check if price is stale by comparing timestamps
         PythStructs.Price memory stalePrice = pythHook.getPrice(ETH_USD_FEED_ID);
-        bool isStale = (block.timestamp - stalePrice.publishTime) > PUBLISH_TIME_TOLERANCE;
-        // Skip assertion here as hook enforces its own validation; ensure no revert
+        uint256 age = block.timestamp - stalePrice.publishTime;
+        // Verify staleness detection works (age exceeds tolerance)
+        assertTrue(age > PUBLISH_TIME_TOLERANCE, "Price should be stale");
         
         // Update with fresh price
         _updateMockPrice(ETH_USD_FEED_ID, BASE_ETH_PRICE, BASE_CONFIDENCE);
@@ -213,7 +214,9 @@ contract PythPriceFeedTest is Test {
         PythStructs.Price memory price1 = pythHook.getPrice(feed1);
         PythStructs.Price memory price2 = pythHook.getPrice(feed2);
         uint256 priceDiff = uint256(int256(price2.price - price1.price));
-        assertTrue(priceDiff > 0, "Price difference should be detected");
+        // Verify prices were retrieved and difference exists
+        assertTrue(price1.price > 0 && price2.price > 0, "Prices should be retrieved");
+        assertTrue(priceDiff > 0, "MEV opportunity should be detected");
         
         // Verify MEV opportunity threshold (1% = 1000000000 with 8 decimals)
         uint256 thresholdAmount = (uint256(int256(price1.price)) * 50000000) / 1000000000; // 0.5%

@@ -147,8 +147,11 @@ contract MEVAuctionIntegrationTest is Test {
         
         // Simulate cross-chain bid through state channel update
         vm.prank(crossChainBidder);
+        // Generate 65-byte signature for ECDSA validation
+        bytes32 hash = keccak256(abi.encodePacked(channelId, uint256(1)));
         bytes memory signature = abi.encodePacked(
-            bytes32(0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef),
+            bytes32(uint256(hash)),
+            bytes32(uint256(hash) + 1),
             bytes1(0x1b)
         );
         
@@ -192,9 +195,12 @@ contract MEVAuctionIntegrationTest is Test {
         
         // Step 3: Submit higher cross-chain bid through state channel
         vm.prank(crossChainBidder);
+        // Generate 65-byte signature for ECDSA validation
+        bytes32 crossChainHash = keccak256(abi.encodePacked(channelId, uint256(1)));
         bytes memory crossChainSignature = abi.encodePacked(
-            bytes32(0xabcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890),
-            bytes1(0x1c)
+            bytes32(uint256(crossChainHash)),
+            bytes32(uint256(crossChainHash) + 1),
+            bytes1(0x1b)
         );
         
         yellowChannel.updateChannelState(
@@ -277,8 +283,11 @@ contract MEVAuctionIntegrationTest is Test {
         
         // Submit initial state update
         vm.prank(crossChainBidder);
+        // Generate 65-byte signature for ECDSA validation
+        bytes32 disputeHash = keccak256(abi.encodePacked(channelId, uint256(1)));
         bytes memory validSignature = abi.encodePacked(
-            bytes32(0x1111111111111111111111111111111111111111111111111111111111111111),
+            bytes32(uint256(disputeHash)),
+            bytes32(uint256(disputeHash) + 1),
             bytes1(0x1b)
         );
         

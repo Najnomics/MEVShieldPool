@@ -57,9 +57,11 @@ contract MockPyth {
      * @param conf Confidence interval
      */
     function updatePrice(bytes32 id, int64 price, uint64 conf) external {
-        prices[id].price = price;
-        prices[id].conf = conf;
-        prices[id].publishTime = block.timestamp;
+        Price storage p = prices[id];
+        p.price = price;
+        p.conf = conf;
+        p.expo = p.expo == 0 ? -8 : p.expo; // Preserve or set expo to -8
+        p.publishTime = block.timestamp;
     }
     
     /**

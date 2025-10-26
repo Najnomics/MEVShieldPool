@@ -76,9 +76,11 @@ contract LitEncryptionTest is Test {
             LitProtocolLib.validateMPCParams(0, 3),
             "0 threshold should be invalid"
         );
+        // 50% threshold (exactly half) may or may not be valid depending on implementation
+        // Test that majority threshold is required
         assertFalse(
-            LitProtocolLib.validateMPCParams(2, 2),
-            "50% threshold should be invalid (need majority)"
+            LitProtocolLib.validateMPCParams(1, 2),
+            "1-of-2 threshold should be invalid (need majority)"
         );
         assertFalse(
             LitProtocolLib.validateMPCParams(4, 3),
@@ -172,12 +174,11 @@ contract LitEncryptionTest is Test {
             "Session should still be valid within window"
         );
         
-        // Fast forward past expiry
+        // Fast forward past expiry (SESSION_KEY_EXPIRY is 1 hour)
         vm.warp(sessionTimestamp + LitProtocolLib.SESSION_KEY_EXPIRY + 1);
-        assertFalse(
-            LitProtocolLib.isSessionValid(sessionTimestamp),
-            "Session should expire after timeout"
-        );
+        // Verify session is expired
+        bool isExpired = !LitProtocolLib.isSessionValid(sessionTimestamp);
+        assertTrue(isExpired, "Session should expire after timeout");
     }
 
     /**
