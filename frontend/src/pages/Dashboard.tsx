@@ -34,26 +34,40 @@ const Dashboard: React.FC = () => {
 
     setIsConnecting(true);
     try {
-      // First, connect MetaMask directly
-      await connectMetaMaskManually();
-      console.log('MetaMask connected! Connecting with Wagmi...');
-      
-      // Find MetaMask connector and connect through Wagmi
+      // Find MetaMask connector first
       const metaMaskConnector = connectors.find(connector => 
         connector.id === 'metaMask' || connector.name === 'MetaMask'
       );
       
-      if (metaMaskConnector) {
-        connect({ connector: metaMaskConnector });
+      if (!metaMaskConnector) {
+        // If no connector found, try direct connection first
+        await connectMetaMaskManually();
+        console.log('MetaMask connected directly, reloading for Wagmi...');
+        toast.success('MetaMask connected! Refreshing...');
+        setTimeout(() => window.location.reload(), 1000);
+        return;
+      }
+
+      // Connect through Wagmi with error handling
+      try {
+        await connect({ connector: metaMaskConnector });
+        console.log('MetaMask connected through Wagmi!');
         toast.success('MetaMask connected successfully!');
-      } else {
-        // Fallback: reload page to let Wagmi auto-detect
+      } catch (connectError: any) {
+        console.error('Wagmi connect error:', connectError);
+        // If Wagmi connect fails, try direct connection
+        await connectMetaMaskManually();
+        console.log('MetaMask connected directly, reloading...');
         toast.success('MetaMask connected! Refreshing...');
         setTimeout(() => window.location.reload(), 1000);
       }
     } catch (error: any) {
       console.error('Connection error:', error);
-      toast.error(error.message || 'Failed to connect MetaMask');
+      if (error.message?.includes('rejected')) {
+        toast.error('Connection rejected. Please try again.');
+      } else {
+        toast.error(error.message || 'Failed to connect MetaMask');
+      }
     } finally {
       setIsConnecting(false);
     }

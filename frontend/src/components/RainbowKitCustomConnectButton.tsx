@@ -42,7 +42,10 @@ export const RainbowKitCustomConnectButton = () => {
               if (!connected) {
                 return (
                   <button
-                    onClick={openConnectModal}
+                    onClick={() => {
+                      console.log('Opening RainbowKit connect modal...');
+                      openConnectModal();
+                    }}
                     type="button"
                     className="px-6 py-2.5 bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white font-semibold rounded-xl shadow-lg shadow-blue-500/25 hover:shadow-blue-500/40 transition-all duration-200"
                   >
