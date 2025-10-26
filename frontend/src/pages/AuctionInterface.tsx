@@ -1,9 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useAccount } from 'wagmi';
 import { useMEVAuction, useAuction } from '../hooks/useMEVAuction';
-import { parseEther, formatEther } from 'viem';
+import { formatEther } from 'viem';
 import { 
-  CurrencyDollarIcon, 
   ClockIcon, 
   ShieldCheckIcon,
   PlusIcon,
@@ -14,7 +13,7 @@ import { KNOWN_POOLS } from '../config/contracts';
 import { toast } from 'react-toastify';
 
 const AuctionInterface: React.FC = () => {
-  const { address, isConnected } = useAccount();
+  const { isConnected } = useAccount();
   const { submitBid, minBid, isSubmitting, isSuccess, hash } = useMEVAuction();
   const [bidAmount, setBidAmount] = useState('');
   const [selectedPoolId, setSelectedPoolId] = useState<string>('');
@@ -63,7 +62,51 @@ const AuctionInterface: React.FC = () => {
 
   const auction = auctionData as any;
   const isAuctionActive = auction?.isActive || false;
-  const timeRemaining = auction?.deadline ? Math.max(0, Number(auction.deadline) - Math.floor(Date.now() / 1000)) : 0;
+
+  const PoolAuctionRow: React.FC<{ poolId: string }> = ({ poolId }) => {
+    const poolHex = `0x${BigInt(poolId).toString(16).padStart(64, '0')}` as `0x${string}`;
+    const { data: poolAuction } = useAuction(poolHex);
+    const poolAuctionData = poolAuction as any;
+    return (
+      <div 
+        className="p-6 bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl hover:bg-white/10 transition-all duration-200"
+      >
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div>
+            <p className="text-sm text-gray-400 mb-1">Pool ID</p>
+            <p className="text-white font-bold">{poolId.slice(0, 16)}...</p>
+          </div>
+          {poolAuctionData && (
+            <>
+              <div>
+                <p className="text-sm text-gray-400 mb-1">Highest Bid</p>
+                <p className="text-cyan-300 font-bold text-lg">
+                  {formatEther(poolAuctionData.highestBid || 0n)} ETH
+                </p>
+              </div>
+              <div>
+                <p className="text-sm text-gray-400 mb-1">Time Remaining</p>
+                <div className="flex items-center space-x-2">
+                  <ClockIcon className="h-4 w-4 text-orange-400" />
+                  <p className="text-orange-300 font-bold">
+                    {poolAuctionData.deadline ? Math.max(0, Math.floor((Number(poolAuctionData.deadline) - Date.now() / 1000) / 60)) : 0} min
+                  </p>
+                </div>
+              </div>
+            </>
+          )}
+        </div>
+        {poolAuctionData?.highestBidder && poolAuctionData.highestBidder !== '0x0000000000000000000000000000000000000000' && (
+          <div className="mt-4 pt-4 border-top border-gray-700/50">
+            <p className="text-sm text-gray-400">Leading Bidder</p>
+            <p className="text-white font-mono text-sm">
+              {poolAuctionData.highestBidder.slice(0, 8)}...{poolAuctionData.highestBidder.slice(-6)}
+            </p>
+          </div>
+        )}
+      </div>
+    );
+  };
 
   return (
     <div className="space-y-8">
@@ -185,53 +228,9 @@ const AuctionInterface: React.FC = () => {
           </div>
 
           <div className="space-y-4">
-            {KNOWN_POOLS.map((pool) => {
-              const poolHex = `0x${BigInt(pool.poolId).toString(16).padStart(64, '0')}` as `0x${string}`;
-              const { data: poolAuction } = useAuction(poolHex);
-              const poolAuctionData = poolAuction as any;
-              
-              return (
-                <div 
-                  key={pool.poolId}
-                  className="p-6 bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl hover:bg-white/10 transition-all duration-200"
-                >
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div>
-                      <p className="text-sm text-gray-400 mb-1">Pool ID</p>
-                      <p className="text-white font-bold">{pool.poolId.slice(0, 16)}...</p>
-                    </div>
-                    {poolAuctionData && (
-                      <>
-                        <div>
-                          <p className="text-sm text-gray-400 mb-1">Highest Bid</p>
-                          <p className="text-cyan-300 font-bold text-lg">
-                            {formatEther(poolAuctionData.highestBid || 0n)} ETH
-                          </p>
-                        </div>
-                        <div>
-                          <p className="text-sm text-gray-400 mb-1">Time Remaining</p>
-                          <div className="flex items-center space-x-2">
-                            <ClockIcon className="h-4 w-4 text-orange-400" />
-                            <p className="text-orange-300 font-bold">
-                              {poolAuctionData.deadline ? Math.max(0, Math.floor((Number(poolAuctionData.deadline) - Date.now() / 1000) / 60)) : 0} min
-                            </p>
-                          </div>
-                        </div>
-                      </>
-                    )}
-                  </div>
-                  
-                  {poolAuctionData?.highestBidder && poolAuctionData.highestBidder !== '0x0000000000000000000000000000000000000000' && (
-                    <div className="mt-4 pt-4 border-t border-gray-700/50">
-                      <p className="text-sm text-gray-400">Leading Bidder</p>
-                      <p className="text-white font-mono text-sm">
-                        {poolAuctionData.highestBidder.slice(0, 8)}...{poolAuctionData.highestBidder.slice(-6)}
-                      </p>
-                    </div>
-                  )}
-                </div>
-              );
-            })}
+            {KNOWN_POOLS.map((pool) => (
+              <PoolAuctionRow key={pool.poolId} poolId={pool.poolId} />
+            ))}
           </div>
         </div>
       </div>

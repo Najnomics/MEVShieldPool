@@ -3,7 +3,6 @@ import { useWeb3 } from '../contexts/Web3Context';
 import { formatEther } from 'viem';
 import { 
   ChartBarIcon, 
-  TrendingUpIcon, 
   ShieldCheckIcon,
   ClockIcon,
   EyeIcon,
@@ -58,7 +57,7 @@ const AnalyticsPage: React.FC = () => {
       name: 'Gas Efficiency',
       value: '95.3%',
       change: '+1.2%',
-      icon: TrendingUpIcon,
+      icon: ArrowTrendingUpIcon,
       color: 'text-purple-300',
       bgColor: 'from-purple-500/20 to-violet-500/20',
       borderColor: 'border-purple-400/30',
@@ -129,12 +128,12 @@ const AnalyticsPage: React.FC = () => {
                 MEV Protection Trends
               </h3>
               <div className="p-3 rounded-xl bg-blue-500/20 border border-blue-400/30 backdrop-blur-sm">
-                <TrendingUpIcon className="h-6 w-6 text-blue-300" />
+                <ArrowTrendingUpIcon className="h-6 w-6 text-blue-300" />
               </div>
             </div>
             <div className="h-64 flex items-center justify-center bg-gradient-to-br from-gray-900/20 to-black/20 backdrop-blur-sm border border-white/10 rounded-xl">
               <div className="text-center">
-                <TrendingUpIcon className="mx-auto h-12 w-12 text-blue-400 mb-4" />
+                <ArrowTrendingUpIcon className="mx-auto h-12 w-12 text-blue-400 mb-4" />
                 <p className="text-blue-200 font-bold">MEV Trends Chart</p>
                 <p className="text-gray-400 text-sm mt-2">Interactive chart visualization</p>
               </div>

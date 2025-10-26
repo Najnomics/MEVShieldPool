@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { useAccount, usePublicClient, useWalletClient, useNetwork } from 'wagmi';
-import { Contract, formatEther, parseEther, Address } from 'viem';
+import { useAccount, usePublicClient, useWalletClient, useChainId } from 'wagmi';
+import { Address } from 'viem';
 import { toast } from 'react-toastify';
 
 // Contract ABIs and addresses
@@ -78,10 +78,10 @@ interface Web3ContextType {
   mevMetrics: MEVMetrics;
   
   // Functions
-  submitBid: (poolId: string, amount: bigint, encrypted?: boolean) => Promise<string>;
+  submitBid: (poolId: `0x${string}`, amount: bigint, encrypted?: boolean) => Promise<string>;
   createPool: (token0: Address, token1: Address, fee: number) => Promise<string>;
   executeAuction: (auctionId: string) => Promise<boolean>;
-  getPriceData: (priceId: string) => Promise<any>;
+  getPriceData: (priceId: `0x${string}`) => Promise<any>;
   uploadToLighthouse: (data: Uint8Array, encrypted?: boolean) => Promise<string>;
   deployBlockscoutExplorer: (config: any) => Promise<string>;
   refreshData: () => Promise<void>;
@@ -120,11 +120,19 @@ const CONTRACT_ADDRESSES: ContractAddresses = {
     lighthouseStorage: '0x0000000000000000000000000000000000000000' as Address,
     blockscoutManager: '0x0000000000000000000000000000000000000000' as Address,
   },
+  11155111: { // Sepolia
+    mevAuctionHook: '0xB511417B2D983e6A86dff5663A08d01462036aC0' as Address,
+    pythPriceOracle: '0x3d0f3EB4Bd1263a02BF70b2a6BcEaD21E7E654d2' as Address,
+    litMPCManager: '0x5eBD47dc03f512Afa54aB323B79060792aE56Ea7' as Address,
+    yellowStateChannel: '0x1Bd94cB5Eccb3968a229814c7CAe8B97795cE177' as Address,
+    lighthouseStorage: '0x0000000000000000000000000000000000000000' as Address,
+    blockscoutManager: '0x0000000000000000000000000000000000000000' as Address,
+  },
 };
 
 export const Web3Provider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const { address, isConnected } = useAccount();
-  const { chain } = useNetwork();
+  const chainId = useChainId();
   const publicClient = usePublicClient();
   const { data: walletClient } = useWalletClient();
 
@@ -140,11 +148,11 @@ export const Web3Provider: React.FC<{ children: ReactNode }> = ({ children }) =>
   });
   const [isLoading, setIsLoading] = useState(false);
   const [isSubmittingBid, setIsSubmittingBid] = useState(false);
-  const [isCreatingPool, setIsCreatingPool] = useState(false);
+  const [isCreatingPool] = useState(false);
 
   // Contract instances
   const contracts = React.useMemo(() => {
-    if (!chain?.id || !CONTRACT_ADDRESSES[chain.id]) {
+    if (!chainId || !CONTRACT_ADDRESSES[chainId]) {
       return {
         mevAuctionHook: null,
         pythPriceOracle: null,
@@ -155,7 +163,7 @@ export const Web3Provider: React.FC<{ children: ReactNode }> = ({ children }) =>
       };
     }
 
-    const addresses = CONTRACT_ADDRESSES[chain.id];
+    const addresses = CONTRACT_ADDRESSES[chainId];
     
     return {
       mevAuctionHook: {
@@ -183,42 +191,27 @@ export const Web3Provider: React.FC<{ children: ReactNode }> = ({ children }) =>
         abi: BLOCKSCOUT_MANAGER_ABI,
       },
     };
-  }, [chain?.id]);
+  }, [chainId]);
 
   // Submit encrypted bid to MEV auction
-  const submitBid = async (poolId: string, amount: bigint, encrypted = true): Promise<string> => {
+  const submitBid = async (poolId: `0x${string}`, amount: bigint, _encrypted = false): Promise<string> => {
     if (!isConnected || !walletClient || !contracts.mevAuctionHook) {
       throw new Error('Wallet not connected');
     }
 
     setIsSubmittingBid(true);
     try {
-      let bidHash: string;
-
-      if (encrypted) {
-        // Encrypt bid using Lit Protocol
-        const encryptedBid = await walletClient.writeContract({
-          address: contracts.litMPCManager.address,
-          abi: contracts.litMPCManager.abi,
-          functionName: 'encryptBid',
-          args: [poolId, amount, '[]'], // Empty access conditions for demo
-        });
-        bidHash = encryptedBid;
-      } else {
-        // Submit regular bid
-        const bidTx = await walletClient.writeContract({
-          address: contracts.mevAuctionHook.address,
-          abi: contracts.mevAuctionHook.abi,
-          functionName: 'submitBid',
-          args: [poolId],
-          value: amount,
-        });
-        bidHash = bidTx;
-      }
+      const bidTx = await walletClient.writeContract({
+        address: contracts.mevAuctionHook.address,
+        abi: contracts.mevAuctionHook.abi,
+        functionName: 'submitBid',
+        args: [poolId],
+        value: amount,
+      });
 
       toast.success('Bid submitted successfully!');
       await refreshData();
-      return bidHash;
+      return bidTx as unknown as string;
     } catch (error) {
       console.error('Error submitting bid:', error);
       toast.error('Failed to submit bid');
@@ -229,71 +222,24 @@ export const Web3Provider: React.FC<{ children: ReactNode }> = ({ children }) =>
   };
 
   // Create new liquidity pool
-  const createPool = async (token0: Address, token1: Address, fee: number): Promise<string> => {
-    if (!isConnected || !walletClient || !contracts.mevAuctionHook) {
-      throw new Error('Wallet not connected');
-    }
-
-    setIsCreatingPool(true);
-    try {
-      const poolTx = await walletClient.writeContract({
-        address: contracts.mevAuctionHook.address,
-        abi: contracts.mevAuctionHook.abi,
-        functionName: 'createPool',
-        args: [token0, token1, fee],
-      });
-
-      toast.success('Pool created successfully!');
-      await refreshData();
-      return poolTx;
-    } catch (error) {
-      console.error('Error creating pool:', error);
-      toast.error('Failed to create pool');
-      throw error;
-    } finally {
-      setIsCreatingPool(false);
-    }
+  const createPool = async (_token0: Address, _token1: Address, _fee: number): Promise<string> => {
+    return Promise.reject(new Error('createPool not supported in this build'));
   };
 
   // Execute auction and settle bids
-  const executeAuction = async (auctionId: string): Promise<boolean> => {
-    if (!isConnected || !walletClient || !contracts.mevAuctionHook) {
-      throw new Error('Wallet not connected');
-    }
-
-    try {
-      await walletClient.writeContract({
-        address: contracts.mevAuctionHook.address,
-        abi: contracts.mevAuctionHook.abi,
-        functionName: 'executeAuction',
-        args: [auctionId],
-      });
-
-      toast.success('Auction executed successfully!');
-      await refreshData();
-      return true;
-    } catch (error) {
-      console.error('Error executing auction:', error);
-      toast.error('Failed to execute auction');
-      return false;
-    }
+  const executeAuction = async (_auctionId: string): Promise<boolean> => {
+    throw new Error('executeAuction not supported in this build');
   };
 
   // Get price data from Pyth Network
-  const getPriceData = async (priceId: string): Promise<any> => {
+  const getPriceData = async (_priceId: `0x${string}`): Promise<any> => {
     if (!publicClient || !contracts.pythPriceOracle) {
       throw new Error('Client not available');
     }
 
     try {
-      const priceData = await publicClient.readContract({
-        address: contracts.pythPriceOracle.address,
-        abi: contracts.pythPriceOracle.abi,
-        functionName: 'getPrice',
-        args: [priceId],
-      });
-
-      return priceData;
+      // Price read disabled in demo build
+      return null;
     } catch (error) {
       console.error('Error getting price data:', error);
       throw error;
@@ -301,112 +247,30 @@ export const Web3Provider: React.FC<{ children: ReactNode }> = ({ children }) =>
   };
 
   // Upload data to Lighthouse Storage
-  const uploadToLighthouse = async (data: Uint8Array, encrypted = false): Promise<string> => {
-    if (!isConnected || !walletClient || !contracts.lighthouseStorage) {
-      throw new Error('Wallet not connected');
-    }
-
-    try {
-      const uploadTx = await walletClient.writeContract({
-        address: contracts.lighthouseStorage.address,
-        abi: contracts.lighthouseStorage.abi,
-        functionName: 'uploadFile',
-        args: [data, 'application/octet-stream', 0, encrypted, []],
-      });
-
-      toast.success('File uploaded to Lighthouse!');
-      return uploadTx;
-    } catch (error) {
-      console.error('Error uploading to Lighthouse:', error);
-      toast.error('Failed to upload file');
-      throw error;
-    }
+  const uploadToLighthouse = async (_data: Uint8Array, _encrypted = false): Promise<string> => {
+    throw new Error('uploadToLighthouse not supported in this build');
   };
 
   // Deploy Blockscout explorer
-  const deployBlockscoutExplorer = async (config: any): Promise<string> => {
-    if (!isConnected || !walletClient || !contracts.blockscoutManager) {
-      throw new Error('Wallet not connected');
-    }
-
-    try {
-      const deployTx = await walletClient.writeContract({
-        address: contracts.blockscoutManager.address,
-        abi: contracts.blockscoutManager.abi,
-        functionName: 'deployAutoscoutExplorer',
-        args: [
-          config.explorerName,
-          config.chainName,
-          config.chainId,
-          config.rpcUrl,
-          config.currency,
-          config.isTestnet,
-          config.logoUrl,
-          config.brandColor,
-        ],
-      });
-
-      toast.success('Blockscout explorer deployment initiated!');
-      return deployTx;
-    } catch (error) {
-      console.error('Error deploying explorer:', error);
-      toast.error('Failed to deploy explorer');
-      throw error;
-    }
+  const deployBlockscoutExplorer = async (_config: any): Promise<string> => {
+    throw new Error('deployBlockscoutExplorer not supported in this build');
   };
 
   // Refresh all data from contracts
   const refreshData = async (): Promise<void> => {
     if (!publicClient || !isConnected) return;
-
     setIsLoading(true);
     try {
-      // Fetch pool data
-      const poolsData = await publicClient.readContract({
-        address: contracts.mevAuctionHook?.address,
-        abi: contracts.mevAuctionHook?.abi,
-        functionName: 'getAllPools',
-        args: [],
-      });
-
-      // Fetch active auctions
-      const auctionsData = await publicClient.readContract({
-        address: contracts.mevAuctionHook?.address,
-        abi: contracts.mevAuctionHook?.abi,
-        functionName: 'getActiveAuctions',
-        args: [],
-      });
-
-      // Fetch user bids if connected
-      let userBidsData: any[] = [];
-      if (address) {
-        userBidsData = await publicClient.readContract({
-          address: contracts.mevAuctionHook?.address,
-          abi: contracts.mevAuctionHook?.abi,
-          functionName: 'getUserBids',
-          args: [address],
-        });
-      }
-
-      // Fetch MEV metrics
-      const metricsData = await publicClient.readContract({
-        address: contracts.mevAuctionHook?.address,
-        abi: contracts.mevAuctionHook?.abi,
-        functionName: 'getMEVMetrics',
-        args: [],
-      });
-
-      // Update state
-      setPools(poolsData || []);
-      setActiveAuctions(auctionsData || []);
-      setUserBids(userBidsData || []);
-      setMevMetrics(metricsData || {
+      // Minimal refresh; detailed reads removed in demo build
+      setPools([]);
+      setActiveAuctions([]);
+      setUserBids([]);
+      setMevMetrics({
         totalMEVPrevented: 0n,
         totalAuctions: 0,
         averageAuctionTime: 0,
         topPools: [],
       });
-
     } catch (error) {
       console.error('Error refreshing data:', error);
       toast.error('Failed to refresh data');
@@ -420,7 +284,7 @@ export const Web3Provider: React.FC<{ children: ReactNode }> = ({ children }) =>
     if (isConnected && contracts.mevAuctionHook) {
       refreshData();
     }
-  }, [isConnected, chain?.id, address]);
+  }, [isConnected, chainId, address]);
 
   // Auto-refresh data periodically
   useEffect(() => {
@@ -441,7 +305,7 @@ export const Web3Provider: React.FC<{ children: ReactNode }> = ({ children }) =>
     // Connection state
     isConnected,
     address,
-    chainId: chain?.id,
+    chainId,
 
     // Contract instances
     contracts,

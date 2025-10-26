@@ -7,7 +7,7 @@ import {
   ClockIcon, 
   BeakerIcon,
   ShieldCheckIcon,
-  TrendingUpIcon
+  ArrowTrendingUpIcon
 } from '@heroicons/react/24/outline';
 import LoadingSpinner from '../components/LoadingSpinner';
 
@@ -192,13 +192,13 @@ const Dashboard: React.FC = () => {
                 Top Performing Pools
               </h3>
               <div className="p-3 rounded-xl bg-purple-500/20 border border-purple-400/30 backdrop-blur-sm">
-                <TrendingUpIcon className="h-6 w-6 text-purple-300" />
+                <ArrowTrendingUpIcon className="h-6 w-6 text-purple-300" />
               </div>
             </div>
             <div className="space-y-4">
               {mevMetrics.topPools.length === 0 ? (
                 <div className="text-center py-8">
-                  <TrendingUpIcon className="mx-auto h-12 w-12 text-gray-500 mb-4" />
+                  <ArrowTrendingUpIcon className="mx-auto h-12 w-12 text-gray-500 mb-4" />
                   <p className="text-gray-400 font-medium">
                     No pool data available
                   </p>
