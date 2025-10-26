@@ -145,7 +145,7 @@ All contracts are deployed and verified on Sepolia:
 
 | Contract | Address | Etherscan |
 |----------|---------|-----------|
-| **MEVAuctionHook** | `0xe2f92333b52765AF0405C44a90e626FC683B6Ac0` | [View](https://sepolia.etherscan.io/address/0xe2f92333b52765af0405c44a90e626fc683b6ac0) |
+| **MEVAuctionHook** | `0xB511417B2D983e6A86dff5663A08d01462036aC0` | [View](https://sepolia.etherscan.io/address/0xB511417B2D983e6A86dff5663A08d01462036aC0) |
 | **LitEncryptionHook** | `0x5eBD47dc03f512Afa54aB323B79060792aE56Ea7` | [View](https://sepolia.etherscan.io/address/0x5ebd47dc03f512afa54ab323b79060792ae56ea7) |
 | **PythPriceHook** | `0x3d0f3EB4Bd1263a02BF70b2a6BcEaD21E7E654d2` | [View](https://sepolia.etherscan.io/address/0x3d0f3eb4bd1263a02bf70b2a6bcead21e7e654d2) |
 | **YellowStateChannel** | `0x1Bd94cB5Eccb3968a229814c7CAe8B97795cE177` | [View](https://sepolia.etherscan.io/address/0x1bd94cb5eccb3968a229814c7cae8b97795ce177) |
@@ -350,7 +350,7 @@ flowchart LR
 ## 🎥 Demo & Live Deployment
 
 **Sepolia Testnet (Live):**
-- MEVAuctionHook: [Etherscan](https://sepolia.etherscan.io/address/0xe2f92333b52765af0405c44a90e626fc683b6ac0) ✅ Verified
+- MEVAuctionHook: [Etherscan](https://sepolia.etherscan.io/address/0xB511417B2D983e6A86dff5663A08d01462036aC0) ✅ Verified (5-min auction duration)
 - LitEncryptionHook: [Etherscan](https://sepolia.etherscan.io/address/0x5ebd47dc03f512afa54ab323b79060792ae56ea7)
 - PythPriceHook: [Etherscan](https://sepolia.etherscan.io/address/0x3d0f3eb4bd1263a02bf70b2a6bcead21e7e654d2)
 - YellowStateChannel: [Etherscan](https://sepolia.etherscan.io/address/0x1bd94cb5eccb3968a229814c7cae8b97795ce177)
