@@ -4,6 +4,8 @@ AI-Powered Privacy and Cross-Chain Execution for Uniswap V4
 
 Uniswap V4 Hook–powered MEV auction that sells first-in-block trading rights and redistributes proceeds to LPs. The protocol integrates Pyth price feeds, Lit Protocol MPC (encrypted bids), and Yellow Network state channels for cross-chain settlement. This document provides a deep architectural overview, lifecycle flows, security assumptions, and operational guidance.
 
+**🚀 Status**: Deployed and verified on Sepolia Testnet - [View Contracts](#deployment)
+
 [![ETHOnline 2025](https://img.shields.io/badge/ETHOnline-2025-blue)](https://ethglobal.com/events/ethonline2025)
 [![Uniswap V4](https://img.shields.io/badge/Uniswap-V4-ff007a)](https://uniswap.org)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
@@ -128,11 +130,31 @@ FOUNDRY_OFFLINE=true FOUNDRY_DISABLE_SIGS=1 forge test -q
 ```bash
 # Set environment variables
 export PRIVATE_KEY=0x...
-export ALCHEMY_API_KEY=your_key
+export SEPOLIA_RPC_URL=https://eth-sepolia.g.alchemy.com/v2/YOUR_KEY
 
-# Example deploy
-forge script script/Deploy.s.sol --rpc-url $SEPOLIA_RPC_URL --broadcast
+# Deploy V4 Hook (uses CREATE2 with HookMiner)
+forge script script/DeployMEVAuctionHook.s.sol --rpc-url $SEPOLIA_RPC_URL --private-key $PRIVATE_KEY --broadcast
+
+# Deploy supporting contracts
+forge script script/DeploySupportingContracts.s.sol --rpc-url $SEPOLIA_RPC_URL --private-key $PRIVATE_KEY --broadcast
 ```
+
+#### Deployed Contracts (Sepolia Testnet)
+
+All contracts are deployed and verified on Sepolia:
+
+| Contract | Address | Etherscan |
+|----------|---------|-----------|
+| **MEVAuctionHook** | `0x44369EA8F59Ed1Df48f8eA14aB1a42Cc07f86aC0` | [View](https://sepolia.etherscan.io/address/0x44369ea8f59ed1df48f8ea14ab1a42cc07f86ac0) |
+| **LitEncryptionHook** | `0x5eBD47dc03f512Afa54aB323B79060792aE56Ea7` | [View](https://sepolia.etherscan.io/address/0x5ebd47dc03f512afa54ab323b79060792ae56ea7) |
+| **PythPriceHook** | `0x3d0f3EB4Bd1263a02BF70b2a6BcEaD21E7E654d2` | [View](https://sepolia.etherscan.io/address/0x3d0f3eb4bd1263a02bf70b2a6bcead21e7e654d2) |
+| **YellowStateChannel** | `0x1Bd94cB5Eccb3968a229814c7CAe8B97795cE177` | [View](https://sepolia.etherscan.io/address/0x1bd94cb5eccb3968a229814c7cae8b97795ce177) |
+| **PoolManager** | `0x89169DeAE6C7E07A12De45B6198D4022e14527cC` | [View](https://sepolia.etherscan.io/address/0x89169deae6c7e07a12de45b6198d4022e14527cc) |
+
+**Network**: Sepolia Testnet (Chain ID: 11155111)  
+**Pyth Contract**: `0xDd24F84d36BF92C65F92307595335bdFab5Bbd21`
+
+See [`docs/deployment-complete.md`](docs/deployment-complete.md) for full deployment details.
 
 ### Running the Frontend
 
@@ -220,13 +242,13 @@ Based on simulations and previous implementations:
 
 ## 🧩 Integrations Alignment
 
-- Uniswap V4 Hooks: `BaseHook` permissions implemented; standardized hook events emitted.
-- Pyth Network: v2 EVM SDK patterns (validated `getPrice`, basis points math, batch updates).
-- Lit Protocol: MPC-only path implemented (encrypted bids, session keys, access control). FHE: deferred.
-- Yellow Network: ERC‑7824-style state channels; signature verification via OpenZeppelin ECDSA.
-- Blockscout Autoscout/MCP: integration scaffolded (optional), compiled via IR to avoid stack-depth.
+- **Uniswap V4 Hooks**: `BaseHook` permissions implemented; standardized hook events emitted. Hook deployed at valid CREATE2 address.
+- **Pyth Network**: v2 EVM SDK patterns (validated `getPrice`, basis points math, batch updates). Contract: `0xDd24F84d36BF92C65F92307595335bdFab5Bbd21`
+- **Lit Protocol**: MPC-only path implemented (encrypted bids, session keys, access control). FHE: deferred.
+- **Yellow Network**: ERC‑7824-style state channels; signature verification via OpenZeppelin ECDSA.
+- **Blockscout Autoscout/MCP**: integration scaffolded (optional), compiled via IR to avoid scaling.
 
-See `docs/integrations-index.md` for canonical docs links to each provider.
+See [`docs/integrations-index.md`](docs/integrations-index.md) for canonical docs links to each provider.
 
 ### Contract-Level Notes
 
@@ -325,15 +347,22 @@ flowchart LR
 
 ---
 
-## 🎥 Demo Video
+## 🎥 Demo & Live Deployment
 
-[🎬 Watch the Demo](https://youtu.be/your-demo-link)
+**Sepolia Testnet (Live):**
+- MEVAuctionHook: [Etherscan](https://sepolia.etherscan.io/address/0x44369ea8f59ed1df48f8ea14ab1a42cc07f86ac0)
+- LitEncryptionHook: [Etherscan](https://sepolia.etherscan.io/address/0x5ebd47dc03f512afa54ab323b79060792ae56ea7)
+- PythPriceHook: [Etherscan](https://sepolia.etherscan.io/address/0x3d0f3eb4bd1263a02bf70b2a6bcead21e7e654d2)
+- YellowStateChannel: [Etherscan](https://sepolia.etherscan.io/address/0x1bd94cb5eccb3968a229814c7cae8b97795ce177)
+
+**Demo Video:** [🎬 Watch the Demo](https://youtu.be/your-demo-link)
 
 **Highlights:**
 - AI-powered MEV risk queries
 - Encrypted bid submission flow
 - Custom Blockscout explorer interface
 - Cross-chain settlement demonstration
+- Live Sepolia testnet deployment
 
 ---
 
@@ -359,12 +388,13 @@ Key test files:
 
 ## 🛣️ Roadmap & Current Status
 
-### Phase 1 - ETHOnline 2025 (Current)
+### Phase 1 - ETHOnline 2025 (Current) ✅
 - [x] Core Uniswap V4 Hook auction
 - [x] Pyth v2 alignment (validated price paths)
 - [x] Lit MPC-only encrypted bids (FHE deferred)
 - [x] Yellow state channels + ECDSA verification
 - [x] Standardized hook events for indexing
+- [x] **Sepolia testnet deployment** (all contracts deployed and verified)
 - [ ] End-to-end UI polish
 
 ### Phase 2 - Post-Hackathon
