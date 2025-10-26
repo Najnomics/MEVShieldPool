@@ -93,14 +93,7 @@ contract MEVAuctionIntegrationTest is Test {
         // Derive a deterministic pool id surrogate for testing
         testPoolId = PoolId.wrap(keccak256("TEST_POOL"));
         
-        // Initialize pool and auction - call internal function directly for testing
-        vm.prank(address(poolManager));
-        // Note: In production, this would be called automatically by pool initialization
-        
-        // Setup Lit encryption for the test pool
-        bytes32 poolBytes = PoolId.unwrap(testPoolId);
-        vm.prank(auctioneer);
-        // Note: Lit encryption would be initialized separately in production
+        // Note: In production, pool initialization and Lit setup run via deploy scripts
     }
 
     /**

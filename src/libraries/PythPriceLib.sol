@@ -59,8 +59,11 @@ library PythPriceLib {
             revert PriceDataStale(age, MAX_PRICE_AGE);
         }
         
-        // Check confidence interval
-        if (price.conf > uint64(CONFIDENCE_THRESHOLD)) {
+        // Check confidence interval relative to price (basis points)
+        uint256 absPrice = uint256(uint64(price.price));
+        if (absPrice == 0) revert InvalidPriceValue(price.price);
+        uint256 confBps = (uint256(price.conf) * 10000) / absPrice;
+        if (confBps > MAX_CONFIDENCE_INTERVAL) {
             revert PriceConfidenceTooLow();
         }
     }
