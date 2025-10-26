@@ -4,7 +4,7 @@ pragma solidity ^0.8.26;
 import {PoolId} from "@uniswap/v4-core/src/types/PoolId.sol";
 
 library AuctionLib {
-    uint256 public constant AUCTION_DURATION = 12 seconds;
+    uint256 public constant AUCTION_DURATION = 5 minutes; // Reasonable duration for searchers to submit bids
     uint256 public constant LP_SHARE = 90;
     uint256 public constant PROTOCOL_FEE = 10;
     uint256 public constant MIN_BID = 0.001 ether;
