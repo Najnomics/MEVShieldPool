@@ -20,7 +20,7 @@ contract InitializePoolWithTokens is Script {
     // For now, we'll need to deploy our own PoolManager or use an existing one
     address constant POOL_MANAGER = 0xE03A1074c86CFeDd5C142C4F04F1a1536e203543;
     // Latest MEVAuctionHook deployed with OpenZeppelin BaseHook
-    address constant MEV_HOOK = 0xBA9D4C29C2cBc02dDD52419ff6b9530d136A2ac0;
+    address constant MEV_HOOK = 0xe2f92333b52765AF0405C44a90e626FC683B6Ac0;
     
     // WETH9 on Sepolia
     address constant WETH9 = 0xfFf9976782d46CC05630D1f6eBAb18b2324d6B14;

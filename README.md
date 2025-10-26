@@ -145,7 +145,7 @@ All contracts are deployed and verified on Sepolia:
 
 | Contract | Address | Etherscan |
 |----------|---------|-----------|
-| **MEVAuctionHook** | `0xBA9D4C29C2cBc02dDD52419ff6b9530d136A2ac0` | [View](https://sepolia.etherscan.io/address/0xBA9D4C29C2cBc02dDD52419ff6b9530d136A2ac0) |
+| **MEVAuctionHook** | `0xe2f92333b52765AF0405C44a90e626FC683B6Ac0` | [View](https://sepolia.etherscan.io/address/0xe2f92333b52765af0405c44a90e626fc683b6ac0) |
 | **LitEncryptionHook** | `0x5eBD47dc03f512Afa54aB323B79060792aE56Ea7` | [View](https://sepolia.etherscan.io/address/0x5ebd47dc03f512afa54ab323b79060792ae56ea7) |
 | **PythPriceHook** | `0x3d0f3EB4Bd1263a02BF70b2a6BcEaD21E7E654d2` | [View](https://sepolia.etherscan.io/address/0x3d0f3eb4bd1263a02bf70b2a6bcead21e7e654d2) |
 | **YellowStateChannel** | `0x1Bd94cB5Eccb3968a229814c7CAe8B97795cE177` | [View](https://sepolia.etherscan.io/address/0x1bd94cb5eccb3968a229814c7cae8b97795ce177) |
