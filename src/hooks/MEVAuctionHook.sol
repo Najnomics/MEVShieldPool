@@ -154,9 +154,8 @@ contract MEVAuctionHook is BaseHook, ReentrancyGuard, Ownable, IMEVAuction {
     function _beforeInitialize(
         address,
         PoolKey calldata key,
-        uint160,
-        bytes calldata
-    ) internal returns (bytes4) {
+        uint160
+    ) internal override returns (bytes4) {
         PoolId poolId = key.toId();
         
         // Initialize auction data for this pool
